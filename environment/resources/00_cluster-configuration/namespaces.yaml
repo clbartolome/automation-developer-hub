@@ -2,6 +2,7 @@
 apiVersion: project.openshift.io/v1
 kind: Project
 metadata:
-  name: TODO
+# TODO: review if needed
+  name: app-collection-test
   annotations:
     argocd.argoproj.io/sync-wave: "0"

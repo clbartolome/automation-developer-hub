@@ -24,7 +24,7 @@ spec:
         - /bin/sh
         - '-c'
         args:
-        # TODO: create required repositories
+        # TODO: change clone repo branch to master
         #Example: https://github.com/clbartolome/ocp-dev-101/blob/master/environment/resources/10_gitea/setup-job.yaml
         - |-
           pwd
@@ -37,7 +37,28 @@ spec:
             http://$GITEA_HOSTNAME/user/sign_up
           
           echo "-- Creating demo repository --"
-          git clone https://github.com/clbartolome/ocp-dev-101       
+          git clone -b argo_installation https://github.com/clbartolome/automation-developer-hub   
+          echo "------------------------------"   
+
+          echo "-- Creating applications collection repository --"
+          RESPONSE=$(curl -o /dev/null -s -w "%{http_code}\n" -X POST \
+            -u gitea:openshift \
+            -d '{"auto_init": true,"default_branch": "master","gitignores": "VisualStudioCode","name": "operations.applications","private": false,"trust_model": "default"}' \
+            -H "Content-Type: application/json" \
+            http://$GITEA_HOSTNAME/api/v1/user/repos)
+
+          if [ "$RESPONSE" != "201" ]; then
+              echo "Error creating repository, error code: $RESPONSE"
+              exit 1
+          fi
+
+          git clone http://gitea:openshift@$GITEA_HOSTNAME/gitea/operations.applications
+          cp -r automation-developer-hub/ansible-collections/operations.applications/. operations.applications
+          cd operations.applications
+          git config user.email "gitea@gitea.com"
+          git config user.name "gitea"
+          git add . && git commit -m "Repository cloned from demo source" && git push
+          cd ..
           echo "------------------------------"   
 
           
