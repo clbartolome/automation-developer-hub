@@ -1,6 +1,7 @@
 ---
 - name: Test application deployment on OCP
   hosts: localhost
+  gather_facts: false
   vars:
     cluster_namespace: "hello-openshift"
 
@@ -13,7 +14,7 @@
         validate_certs: false
       register: ingress_info
 
-    - name: Get OpenShift Ingress domain
+    - name: Set Ingress domain
       ansible.builtin.set_fact:
         ingress_domain: "{{ ingress_info | json_query('resources[*].spec.domain') | list | first | string }}"
 
@@ -34,3 +35,14 @@
         template:
           path: templates/hello-openshift.yml.j2
         validate_certs: false
+
+    - name: Wait for application to start serving
+      ansible.builtin.uri:
+        url: http://hello.{{ ingress_domain }}
+        method: GET
+        return_content: true
+        status_code: 200
+      register: uri_output
+      until: '"Hello OpenShift!" in uri_output.content'
+      retries: 10
+      delay: 10
