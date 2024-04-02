@@ -1,0 +1,71 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-openshift
+  namespace: {{ hello_openshift_ocp_namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hello-openshift
+  template:
+    metadata:
+      labels:
+        app: hello-openshift
+    spec:
+      containers:
+      - name: hello-openshift
+        imagePullPolicy: Always
+        image: openshift/hello-openshift:latest
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        livenessProbe:
+          initialDelaySeconds: 30
+          tcpSocket:
+            port: 8080
+          timeoutSeconds: 1
+          failureThreshold: 10
+          periodSeconds: 20
+        readinessProbe:
+          httpGet:
+            port: 8080
+            path: /
+          initialDelaySeconds: 30
+          timeoutSeconds: 10
+        resources:
+          limits:
+            memory: 32Mi
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-openshift-service
+  namespace: {{ hello_openshift_ocp_namespace }}
+spec:
+  selector:
+    app: hello-openshift
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: hello-openshift-route
+  namespace: {{ hello_openshift_ocp_namespace }}
+  labels:
+    app: hello-openshift
+spec:
+  host: {{ hello_openshift_subdomain }}.{{ ingress_domain }}
+  path: /
+  to:
+    kind: Service
+    name: hello-openshift-service
+  port:
+    targetPort: 8080
