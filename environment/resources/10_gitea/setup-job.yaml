@@ -37,7 +37,7 @@ spec:
             http://$GITEA_HOSTNAME/user/sign_up
           
           echo "-- Creating demo repository --"
-          git clone -b argo_installation https://github.com/clbartolome/automation-developer-hub   
+          git clone -b argo_instalation https://github.com/clbartolome/automation-developer-hub   
           echo "------------------------------"   
 
           echo "-- Creating applications collection repository --"

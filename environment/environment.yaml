@@ -8,8 +8,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/clbartolome/ocp-dev-101.git
-    targetRevision: master
+    repoURL: https://github.com/clbartolome/automation-developer-hub.git
+    # TODO: change branch
+    targetRevision: argo_instalation
     path: environment/resources/
     directory:
       recurse: true
