@@ -3,6 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hello-openshift
+  namespace: {{ hello_openshift_ocp_namespace }}
 spec:
   replicas: 1
   selector:
@@ -43,7 +44,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: hello-openshift-service
-  namespace: hello-openshift
+  namespace: {{ hello_openshift_ocp_namespace }}
 spec:
   selector:
     app: hello-openshift
@@ -57,11 +58,11 @@ kind: Route
 apiVersion: route.openshift.io/v1
 metadata:
   name: hello-openshift-route
-  namespace: hello-openshift
+  namespace: {{ hello_openshift_ocp_namespace }}
   labels:
     app: hello-openshift
 spec:
-  host: hello.{{ ingress_domain }}
+  host: {{ hello_openshift_subdomain }}.{{ ingress_domain }}
   path: /
   to:
     kind: Service
