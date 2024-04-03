@@ -10,4 +10,11 @@ metadata:
   namespace: gitea
 spec:
   to:
+    kind: Service
     name: gitea
+    weight: 100
+  port:
+    targetPort: 3000-tcp
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
