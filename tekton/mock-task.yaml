@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: mock
-  namespace: demo-tekton
+  # namespace: demo-tekton
   annotations:
     description: |
       Mock tasks for testing porposes.

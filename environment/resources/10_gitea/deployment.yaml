@@ -27,7 +27,7 @@ spec:
       containers:
       - name: gitea
         imagePullPolicy: Always
-        image: quay.io/gpte-devops-automation/gitea:1.15.10
+        image: gitea/gitea:1.21.7
         ports:
         - containerPort: 3000
           protocol: TCP

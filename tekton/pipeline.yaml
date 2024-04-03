@@ -1,4 +1,4 @@
-apiVersion: tekton.dev/v1
+apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
   generation: 1
@@ -10,26 +10,21 @@ metadata:
     pipeline.openshift.io/runtime: ansible
     pipeline.openshift.io/type: kubernetes
   name: collection-ci-ci
-  namespace: demo-tekton
+  # namespace: demo-tekton
   annotations:
     argocd.argoproj.io/sync-wave: "38"
 spec:
   params:
-    - default: collection-ci
+    - default: operations.applications
       name: APP_NAME
       type: string
       # TODO: use gitea
-    - default: 'https://github.com/clbartolome/automation-developer-hub'
+    - default: 'http://gitea.gitea.svc.cluster.local:3000/gitea/operations.applications'
       name: GIT_REPO
       type: string
     - default: ''
       name: GIT_REVISION
       type: string
-    - default: .
-      name: PATH_CONTEXT
-      type: string
-  workspaces: 
-    - workspace
     # ------------ FETCH REPOSITORY ------------ #
   tasks:
     - name: fetch-repository
@@ -48,23 +43,18 @@ spec:
       workspaces:
         - name: output
           workspace: workspace
-    # ------------ LINT ANALYSIS ------------ #
-    - name: lint-test
+    # ------------ TEST ------------ #
+    - name: test
       runAfter:
         - fetch-repository
       taskRef:
         kind: Task
-        name: mock
+        name: test
       params:
         - name: MOCK_MSG
-          value: unit-test
-    # ------------ MOLECULE TEST ------------ #
-    - name: code-analysis
-      runAfter:
-        - fetch-repository
-      taskRef:
-        kind: Task
-        name: mock
-      params:
-        - name: MOCK_MSG
-          value: code-analysis
+          value: test-ansible
+      workspaces:
+        - name: source
+          workspace: workspace
+  workspaces:
+    - name: workspace
