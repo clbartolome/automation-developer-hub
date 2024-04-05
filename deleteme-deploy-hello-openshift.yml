@@ -1,12 +1,13 @@
 ---
-- name: Deploy hello-openshift application
+- name: Deploy test_app application
   hosts: localhost
   gather_facts: false
   tasks:
-    - name: Include the Role "hello-openshift"
+    - name: Include the Role "test-app"
       ansible.builtin.include_role:
-        name: operations.applications.hello_openshift
+        name: operations.applications.test_app
       vars:
-        hello_openshift_ocp_namespace: "hello-openshift"
-        hello_openshift_subdomain: "hello"
-        hello_openshift_content_output: "Hello OpenShift!"
+        app_name: "test"
+        app_image: "openshift/hello-openshift:latest"
+        app_port: "8080"
+        content_output: "Hello OpenShift!"

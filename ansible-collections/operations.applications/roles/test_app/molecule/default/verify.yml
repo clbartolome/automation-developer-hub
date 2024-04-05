@@ -1,0 +1,61 @@
+---
+- name: Verify
+  hosts: localhost
+  gather_facts: false
+  environment:
+    K8S_AUTH_HOST: "{{ lookup('ansible.builtin.env', 'K8S_AUTH_HOST') }}"
+    K8S_AUTH_API_KEY: "{{ lookup('ansible.builtin.env', 'K8S_AUTH_API_KEY') }}"
+  tasks:
+
+    - name: Include role vars
+      ansible.builtin.include_vars:
+        file: ../../vars/main.yml
+
+    - name: Get Ingress Info
+      kubernetes.core.k8s_info:
+        api_version: config.openshift.io/v1
+        kind: Ingress
+        name: cluster
+        validate_certs: false
+      register: ingress_info
+
+    - name: Set Ingress domain
+      ansible.builtin.set_fact:
+        ingress_domain: "{{ ingress_info | json_query('resources[*].spec.domain') | list | first | string }}"
+
+    - name: Check Namespace
+      kubernetes.core.k8s_info:
+        api_version: config.openshift.io/v1
+        kind: Namespace
+        name: "{{ ocp_namespace }}"
+        validate_certs: false
+
+    - name: Check Deployment
+      kubernetes.core.k8s_info:
+        api_version: config.openshift.io/v1
+        kind: Deployment
+        name: "{{ app_name }}"
+        validate_certs: false
+
+    - name: Check Service
+      kubernetes.core.k8s_info:
+        api_version: config.openshift.io/v1
+        kind: Service
+        name: "{{ ocp_service }}"
+        validate_certs: false
+
+    - name: Check Route
+      kubernetes.core.k8s_info:
+        api_version: config.openshift.io/v1
+        kind: Service
+        name: "{{ ocp_route }}"
+        validate_certs: false
+
+    - name: Wait for application to start serving
+      ansible.builtin.uri:
+        url: http://{{ app_name }}.{{ ingress_domain }}
+        method: GET
+        return_content: true
+        status_code: 200
+      register: uri_output
+      until: content_output in uri_output.content

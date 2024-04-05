@@ -2,35 +2,35 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: hello-openshift
-  namespace: {{ hello_openshift_ocp_namespace }}
+  name: {{ app_name }}
+  namespace: {{ ocp_namespace }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: hello-openshift
+      app: {{ app_name }}
   template:
     metadata:
       labels:
-        app: hello-openshift
+        app: {{ app_name }}
     spec:
       containers:
-      - name: hello-openshift
+      - name: {{ app_name }}
         imagePullPolicy: Always
-        image: openshift/hello-openshift:latest
+        image: {{ app_image }}
         ports:
-        - containerPort: 8080
+        - containerPort: {{ app_port }}
           protocol: TCP
         livenessProbe:
           initialDelaySeconds: 30
           tcpSocket:
-            port: 8080
+            port: {{ app_port }}
           timeoutSeconds: 1
           failureThreshold: 10
           periodSeconds: 20
         readinessProbe:
           httpGet:
-            port: 8080
+            port: {{ app_port }}
             path: /
           initialDelaySeconds: 30
           timeoutSeconds: 10
@@ -38,34 +38,34 @@ spec:
           limits:
             memory: 32Mi
 
-
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: hello-openshift-service
-  namespace: {{ hello_openshift_ocp_namespace }}
+  name: {{ ocp_service }}
+  namespace: {{ ocp_namespace }}
 spec:
   selector:
-    app: hello-openshift
+    app: {{ app_name }}
   ports:
-    - protocol: TCP
-      port: 8080
-      targetPort: 8080
+    - name: {{ app_name }}-{{ app_port }}
+      protocol: TCP
+      port: {{ app_port }}
+      targetPort: {{ app_port }}
 
 ---
 kind: Route
 apiVersion: route.openshift.io/v1
 metadata:
-  name: hello-openshift-route
-  namespace: {{ hello_openshift_ocp_namespace }}
+  name: {{ ocp_route }}
+  namespace: {{ ocp_namespace }}
   labels:
-    app: hello-openshift
+    app: {{ app_name }}
 spec:
-  host: {{ hello_openshift_subdomain }}.{{ ingress_domain }}
+  host: {{ app_name }}.{{ ingress_domain }}
   path: /
   to:
     kind: Service
-    name: hello-openshift-service
+    name: {{ ocp_service }}
   port:
-    targetPort: 8080
+    targetPort: {{ app_port }}
