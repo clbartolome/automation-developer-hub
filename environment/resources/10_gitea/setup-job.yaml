@@ -96,7 +96,7 @@ spec:
             -H "Content-Type: application/json" \
             http://$GITEA_HOSTNAME/api/v1/repos/gitea/operations.applications/collaborators/develop)
 
-          if [ "$RESPONSE" != "200" ]; then
+          if [ "$RESPONSE" != "204" ]; then
               echo "Error making colaborator, error code: $RESPONSE"
               exit 1
           fi
