@@ -68,7 +68,7 @@ spec:
             -H "Content-Type: application/json" \
             http://$GITEA_HOSTNAME/api/v1/admin/users/cicd-aide)
 
-          if [ "$RESPONSE" != "201" ]; then
+          if [ "$RESPONSE" != "200" ]; then
               echo "Error making cicd aide admin, error code: $RESPONSE"
               exit 1
           fi
@@ -96,7 +96,7 @@ spec:
             -H "Content-Type: application/json" \
             http://$GITEA_HOSTNAME/api/v1/repos/gitea/operations.applications/collaborators/develop)
 
-          if [ "$RESPONSE" != "201" ]; then
+          if [ "$RESPONSE" != "200" ]; then
               echo "Error making colaborator, error code: $RESPONSE"
               exit 1
           fi
