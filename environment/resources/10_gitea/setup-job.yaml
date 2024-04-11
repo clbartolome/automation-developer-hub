@@ -40,7 +40,7 @@ spec:
 
           RESPONSE=$(curl -o /dev/null -s -w "%{http_code}\n" -X POST \
             -u gitea:openshift \
-            -d '{"develop@example.com","full_name": "develop","login_name": "develop","must_change_password": false,"password": "develop""restricted": true,"send_notify": false,"username": "develop"}' \
+            -d '{"develop@example.com","full_name": "develop","login_name": "develop","must_change_password": false,"password": "develop","restricted": true,"send_notify": false,"username": "develop"}' \
             -H "Content-Type: application/json" \
             http://$GITEA_HOSTNAME/api/v1/admin/users)
 
@@ -53,7 +53,7 @@ spec:
 
           RESPONSE=$(curl -o /dev/null -s -w "%{http_code}\n" -X POST \
             -u gitea:openshift \
-            -d '{"cicd-aide@example.com","full_name": "cicd-aide","login_name": "cicd-aide","must_change_password": false,"password": "cicd-aide""restricted": true,"send_notify": false,"username": "cicd-aide"}' \
+            -d '{"cicd-aide@example.com","full_name": "cicd-aide","login_name": "cicd-aide","must_change_password": false,"password": "cicd-aide","restricted": true,"send_notify": false,"username": "cicd-aide"}' \
             -H "Content-Type: application/json" \
             http://$GITEA_HOSTNAME/api/v1/admin/users)
 
