@@ -16,7 +16,7 @@ spec:
       containers:
       - name: git
         image: quay.io/calopezb/git-utils:1.0.0
-        # TODO: Read CONFIGURATION using a configmap
+        # TODO: Read CONFIGURATION using a configmap + ansible
         env:
         - name: GITEA_HOSTNAME
           value: "gitea.gitea.svc.cluster.local:3000"
@@ -73,7 +73,7 @@ spec:
               exit 1
           fi
                    
-          echo "-- Creating demo repository --"
+          echo "-- Cloning demo repository --"
           git clone -b argo_instalation https://github.com/clbartolome/automation-developer-hub   
           echo "------------------------------"   
 
