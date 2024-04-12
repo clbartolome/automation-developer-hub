@@ -16,7 +16,7 @@ metadata:
 spec:
   params:
     - default: operations.applications
-      name: APP_NAME
+      name: COLLECTION_NAME
       type: string
       # TODO: use gitea
     - default: 'http://gitea.gitea.svc.cluster.local:3000/gitea/operations.applications'
@@ -34,7 +34,7 @@ spec:
         - name: revision
           value: $(params.GIT_REVISION)
         - name: subdirectory
-          value: ''
+          value: source-code/$(params.COLLECTION_NAME)
         - name: deleteExisting
           value: 'true'
       taskRef:
@@ -44,17 +44,19 @@ spec:
         - name: output
           workspace: workspace
     # ------------ TEST ------------ #
-    - name: test
+    - name: ansible-lint-test
       runAfter:
         - fetch-repository
       taskRef:
         kind: Task
-        name: test
+        name: ansible-lint
       params:
-        - name: MOCK_MSG
-          value: test-ansible
+        - name: COLLECTION_NAME
+          value: $(params.COLLECTION_NAME)
+        - name: CODE_DIR
+          value: source-code
       workspaces:
-        - name: source
+        - name: working-dir
           workspace: workspace
   workspaces:
     - name: workspace

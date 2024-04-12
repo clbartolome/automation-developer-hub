@@ -1,0 +1,37 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: ansible-lint
+  # namespace: demo-tekton
+  annotations:
+    description: |
+      Task to execute ansible lint tests on a collection repository.
+    argocd.argoproj.io/sync-wave: "38"
+spec:
+  params:
+    - name: COLLECTION_NAME
+      description: name ot the collection to be tested (should be the equal to the repo name and in n.c format)
+    - name: CODE_DIR
+      description: name ot the folder inside working-dir workspace where collection code is stored
+  stepTemplate:
+    env:
+      - name: HOME
+        value: /tekton/home
+  steps:
+    - name: install-collection
+      image: quay.io/ansible/creator-ee:v24.2.0
+      script: |
+        ls /workspace
+        ansible-galaxy collection install /workspace/$(params.CODE_DIR)/$(params.COLLECTION_NAME) -p /workspace
+
+    - name: execute-lint-tests
+      image: quay.io/ansible/creator-ee:v24.2.0
+      script: |
+        COLLECTIONS_DIR=$(echo $(params.COLLECTION_NAME) | sed 's/\./\//g')
+        cd /workspace/ansible_collections/$COLLECTIONS_DIR
+        ansible-lint --nocolor
+  workspaces:
+    - mountPath: /workspace
+      name: working-dir
+
+        

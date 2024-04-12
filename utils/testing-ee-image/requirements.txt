@@ -1,0 +1,2 @@
+ansible-dev-tools==24.2.1
+molecule==6.0.3
