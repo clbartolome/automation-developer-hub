@@ -3,6 +3,8 @@ galaxy_info:
   description: This role installs a generic app in Openshift
   company: Red Hat
 
+  role_name: test_app  # if absent directory name hosting role is used instead
+  namespace: applications  # if absent, author is used instead
   # If the issue tracker for your role is not on github, uncomment the
   # next line and provide a value
   # issue_tracker_url: http://example.com/issue/tracker
