@@ -43,7 +43,7 @@ spec:
       workspaces:
         - name: output
           workspace: workspace
-    # ------------ TEST ------------ #
+    # ------------ TEST LINT------------ #
     - name: ansible-lint-test
       runAfter:
         - fetch-repository
@@ -58,5 +58,21 @@ spec:
       workspaces:
         - name: working-dir
           workspace: workspace
+    # ------------ TEST MOLECULE ------------ #
+    - name: ansible-molecule-test
+      runAfter:
+        - ansible-lint-test
+      taskRef:
+        kind: Task
+        name: molecule-test
+      params:
+        - name: COLLECTION_NAME
+          value: $(params.COLLECTION_NAME)
+        - name: CODE_DIR
+          value: source-code
+      workspaces:
+        - name: working-dir
+          workspace: workspace
   workspaces:
     - name: workspace
+

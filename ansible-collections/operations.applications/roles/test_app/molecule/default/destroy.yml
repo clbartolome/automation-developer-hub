@@ -1,24 +1,24 @@
 ---
 - name: Destroy
   hosts: localhost
-  connection: local
   gather_facts: false
-  # no_log: "{{ molecule_no_log }}"
+  vars:
+    app_name: "molecule"
+    app_image: "openshift/hello-openshift:latest"
+    app_port: "8080"
+    content_output: "Hello OpenShift!"
   tasks:
-    # Developer must implement.
 
-    # Mandatory configuration for Molecule to function.
+    - name: Include role vars
+      ansible.builtin.include_vars:
+        file: ../../vars/main.yml
 
-    - name: Populate instance config
-      ansible.builtin.set_fact:
-        instance_conf: {}
-
-    - name: Dump instance config
-      ansible.builtin.copy:
-        content: |
-          # Molecule managed
-
-          {{ instance_conf | to_json | from_json | to_yaml }}
-        dest: "{{ molecule_instance_config }}"
-        mode: "0600"
-      when: server.changed | default(false) | bool  # noqa no-handler
+    - name: Destroy namespace
+      kubernetes.core.k8s:
+        definition:
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ ocp_namespace }}"
+        state: absent
+        validate_certs: false
