@@ -29,6 +29,7 @@ spec:
       script: |
         COLLECTIONS_DIR=$(echo $(params.COLLECTION_NAME) | sed 's/\./\//g')
         cd /workspace/ansible_collections/$COLLECTIONS_DIR/roles/test_app
+        pwd
         molecule test
   workspaces:
     - mountPath: /workspace
