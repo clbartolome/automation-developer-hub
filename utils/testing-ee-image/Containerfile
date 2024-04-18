@@ -1,9 +1,0 @@
-FROM ubi9/ubi:9.3
-
-COPY requirements.txt ./
-
-
-RUN dnf install python-pip -y \
-    && pip install --no-cache-dir -r requirements.txt
-
-CMD ["ansible", "--version"]
