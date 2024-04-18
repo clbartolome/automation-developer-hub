@@ -1,5 +1,2 @@
 ---
 # vars file for test_app
-ocp_namespace: "{{ app_name }}-namespace"
-ocp_service: "{{ app_name }}-service"
-ocp_route: "{{ app_name }}-route"

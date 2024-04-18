@@ -4,7 +4,7 @@ galaxy_info:
   company: Red Hat
 
   role-name: test_app  # if absent directory name hosting role is used instead
-  namespace: applications  # if absent, author is used instead
+  namespace: operations  # if absent, author is used instead
   galaxy_name: test_app
   # If the issue tracker for your role is not on github, uncomment the
   # next line and provide a value

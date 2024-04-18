@@ -2,9 +2,6 @@
 - name: Converge
   hosts: localhost
   gather_facts: false
-  environment:
-    K8S_AUTH_HOST: "{{ lookup('ansible.builtin.env', 'K8S_AUTH_HOST') }}"
-    K8S_AUTH_API_KEY: "{{ lookup('ansible.builtin.env', 'K8S_AUTH_API_KEY') }}"
   tasks:
     - name: Include the Role "test_app"
       ansible.builtin.include_role:
@@ -14,3 +11,4 @@
         app_image: "openshift/hello-openshift:latest"
         app_port: "8080"
         content_output: "Hello OpenShift!"
+        app_namespace: "{{ lookup('ansible.builtin.env', 'APP_NAMESPACE') }}"

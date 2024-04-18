@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ app_name }}
-  namespace: {{ ocp_namespace }}
+  namespace: {{ app_namespace }}
 spec:
   replicas: 1
   selector:
@@ -42,8 +42,8 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ ocp_service }}
-  namespace: {{ ocp_namespace }}
+  name: {{ app_name }}
+  namespace: {{ app_namespace }}
 spec:
   selector:
     app: {{ app_name }}
@@ -57,15 +57,13 @@ spec:
 kind: Route
 apiVersion: route.openshift.io/v1
 metadata:
-  name: {{ ocp_route }}
-  namespace: {{ ocp_namespace }}
+  name: {{ app_name }}
+  namespace: {{ app_namespace }}
   labels:
     app: {{ app_name }}
 spec:
-  host: {{ app_name }}.{{ ingress_domain }}
-  path: /
   to:
     kind: Service
-    name: {{ ocp_service }}
+    name: {{ app_name }}
   port:
-    targetPort: {{ app_port }}
+    targetPort: {{ app_name }}-{{ app_port }}

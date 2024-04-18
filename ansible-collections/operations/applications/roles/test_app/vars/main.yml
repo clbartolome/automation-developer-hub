@@ -1,0 +1,4 @@
+---
+# vars file for test_app
+app_namespace: "{{ lookup('ansible.builtin.env', 'APP_NAMESPACE') }}"
+app_name: "{{ lookup('ansible.builtin.env', 'APP_NAME') }}"

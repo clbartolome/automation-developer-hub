@@ -6,8 +6,4 @@
     - name: Include the Role "test-app"
       ansible.builtin.include_role:
         name: operations.applications.test_app
-      vars:
-        app_name: "test"
-        app_image: "openshift/hello-openshift:latest"
-        app_port: "8080"
-        content_output: "Hello OpenShift!"
+
