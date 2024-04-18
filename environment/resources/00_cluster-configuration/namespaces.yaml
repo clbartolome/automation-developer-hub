@@ -1,8 +1,15 @@
+
 ---
 apiVersion: project.openshift.io/v1
 kind: Project
 metadata:
-# TODO: review if needed
-  name: app-collection-test
+  name: gitea
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+---
+apiVersion: project.openshift.io/v1
+kind: Project
+metadata:
+  name: automation-cicd
   annotations:
     argocd.argoproj.io/sync-wave: "0"

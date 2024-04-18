@@ -5,7 +5,7 @@ metadata:
   name: configure-gitea
   namespace: gitea
   annotations:
-    argocd.argoproj.io/sync-wave: "19"
+    argocd.argoproj.io/sync-wave: "29"
   labels:
       app.kubernetes.io/part-of: gitea
       name: configure-gitea
@@ -77,7 +77,7 @@ spec:
           git clone -b argo_instalation https://github.com/clbartolome/automation-developer-hub   
           echo "------------------------------"   
 
-          echo "-- Creating applications collection repository --"
+          echo "-- Creating operations collection repository --"
           RESPONSE=$(curl -o /dev/null -s -w "%{http_code}\n" -X POST \
             -u gitea:openshift \
             -d '{"auto_init": true,"default_branch": "master","gitignores": "VisualStudioCode","name": "operations.applications","private": false,"trust_model": "default"}' \
@@ -98,6 +98,18 @@ spec:
 
           if [ "$RESPONSE" != "204" ]; then
               echo "Error making colaborator, error code: $RESPONSE"
+              exit 1
+          fi
+
+          echo "-- Protecting master branch in applications collection repository --"
+          RESPONSE=$(curl -o /dev/null -s -w "%{http_code}\n" -X PUT \
+            -u gitea:openshift \
+            -d '{"branch_name": "master","dismiss_stale_approvals": true, "enable_push": false, "enable_status_check": true,"status_check_contexts": [ "collection-pr-validation"]}' \
+            -H "Content-Type: application/json" \
+            http://$GITEA_HOSTNAME/api/v1/repos/gitea/operations.applications/branch_protections)
+
+          if [ "$RESPONSE" != "201" ]; then
+              echo "Error protecting master branch, error code: $RESPONSE"
               exit 1
           fi
 

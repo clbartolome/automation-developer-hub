@@ -1,9 +1,0 @@
----
-- name: Deploy test_app application
-  hosts: localhost
-  gather_facts: false
-  tasks:
-    - name: Include the Role "test-app"
-      ansible.builtin.include_role:
-        name: operations.applications.test_app
-

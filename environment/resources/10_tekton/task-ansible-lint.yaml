@@ -1,12 +1,12 @@
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: molecule-test
-  # namespace: demo-tekton
+  name: ansible-lint
+  namespace: automation-cicd
   annotations:
     description: |
-      Task to execute molecule tests on a collection repository.
-    argocd.argoproj.io/sync-wave: "38"
+      Task to execute ansible lint tests on a collection repository.
+    argocd.argoproj.io/sync-wave: "10"
 spec:
   params:
     - name: COLLECTION_NAME
@@ -24,13 +24,15 @@ spec:
         ls /workspace
         ansible-galaxy collection install /workspace/$(params.CODE_DIR)/$(params.COLLECTION_NAME) -p /workspace
 
-    - name: execute-molecule-tests
+    - name: execute-lint-tests
+      onError: continue
       image: quay.io/ansible/creator-ee:v24.2.0
       script: |
         COLLECTIONS_DIR=$(echo $(params.COLLECTION_NAME) | sed 's/\./\//g')
-        cd /workspace/ansible_collections/$COLLECTIONS_DIR/roles/test_app
-        pwd
-        molecule test
+        cd /workspace/ansible_collections/$COLLECTIONS_DIR
+        ansible-lint --nocolor
   workspaces:
     - mountPath: /workspace
       name: working-dir
+
+        

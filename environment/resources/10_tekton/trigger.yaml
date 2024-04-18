@@ -1,0 +1,101 @@
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: trigger-collection-pull-request
+  namespace: automation-cicd
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+spec:
+  triggers:
+    - name: github-listener
+      interceptors:
+        - ref:
+            name: github
+            kind: ClusterInterceptor
+            apiVersion: triggers.tekton.dev
+          params:
+            - name: eventTypes
+              value:
+                - pull_request
+        - ref:
+            name: cel
+            kind: ClusterInterceptor
+            apiVersion: triggers.tekton.dev
+          params:
+            - name: filter
+              value: "body.action in ['opened','edited','reopened'] && body.pull_request.merged == false"
+        - cel:
+            overlays:
+              - key: gitUser
+                expression: "body.pull_request.base.repo.owner.login"        
+              - key: gitRepo
+                expression: "body.pull_request.base.repo.name"
+              - key: gitCommit
+                expression: "body.pull_request.head.sha"             
+      bindings:
+        - kind: TriggerBinding
+          ref: "trigger-binding-collection-pull-request"
+      template:
+        ref: "trigger-template-collection-pull-request"
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerBinding
+metadata:
+  name: "trigger-binding-collection-pull-request"
+  namespace: automation-cicd
+  annotations:
+    argocd.argoproj.io/sync-wave: "14"
+spec:
+  params:
+    - name: gitUser
+      value: $(extensions.gitUser)
+    - name: gitRepo
+      value: $(extensions.gitRepo)
+    - name: gitCommit
+      value: $(extensions.gitCommit)
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: "trigger-template-collection-pull-request"
+  namespace: automation-cicd
+  annotations:
+    argocd.argoproj.io/sync-wave: "13"
+spec:
+  params:
+    - name: gitUser
+    - name: gitRepo
+    - name: gitCommit
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1beta1
+    kind: PipelineRun
+    metadata:
+      generateName: "collection-pull-request-"
+      namespace: automation-cicd
+      labels:
+        app.kubernetes.io/instance: collection-pull-request
+        tekton.dev/pipeline: collection-pull-request
+    spec:
+      params:
+        - name: GIT_USER
+          value: $(tt.params.gitUser)
+        - name: GIT_REPO
+          value: $(tt.params.gitRepo)
+        - name: GIT_COMMIT
+          value: $(tt.params.gitCommit)
+        - name: PIPELINERUN_UID
+          value: $(context.pipelineRun.name)
+      pipelineRef:
+        name: collection-pull-request
+      serviceAccountName: pipeline
+      timeout: 1h0m0s
+      workspaces:
+        - name: workspace
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 100Mi

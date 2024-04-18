@@ -1,0 +1,116 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  generation: 1
+  labels:
+    app.kubernetes.io/instance: collection-pull-request
+    app.kubernetes.io/name: collection-pull-request
+    operator.tekton.dev/operand-name: openshift-pipelines-addons
+    pipeline.openshift.io/runtime: ansible
+    pipeline.openshift.io/type: kubernetes
+  name: collection-pull-request
+  namespace: automation-cicd
+  annotations:
+    argocd.argoproj.io/sync-wave: "11"
+spec:
+  params:
+    - name: GIT_URL
+      default: 'http://gitea.gitea.svc.cluster.local:3000'
+      type: string
+    - name: GIT_USER
+      description: Git user
+      type: string
+    - name: GIT_REPO
+      description: Git repository
+      type: string
+    - name: GIT_COMMIT
+      description: Git commit reference
+      type: string
+    - name: PIPELINERUN_UID
+      description: PipelineRun UID
+      type: string
+  tasks:
+  # ------------ GET PIPELINERUN URL (console) ------------ #
+    - name: get-pipelinerun-url
+      params:
+        - name: PIPELINERUN_UID
+          value: $(params.PIPELINERUN_UID)
+      taskRef:
+        kind: Task
+        name: pipelinerun-url
+  # ------------ UPDATE STATUS (pending) ------------ #
+    - name: git-status-pending
+      runAfter:
+        - get-pipelinerun-url
+      params:
+        - name: CONTEXT_REF
+          value: "collection-pr-validation"
+        - name: CONTEXT_DESC
+          value: "Collection Pull Request Validations"
+        - name: CONTEXT_STATUS
+          value: "pending"
+        - name: CONTEXT_TARGET_URL
+          value: "$(tasks.get-pipelinerun-url.results.PIPELINERUN_URL)"
+        - name: GIT_URL
+          value: $(params.GIT_URL)
+        - name: GIT_USER
+          value: $(params.GIT_USER)
+        - name: GIT_REPO
+          value: $(params.GIT_REPO)
+        - name: GIT_COMMIT
+          value: $(params.GIT_COMMIT)
+      taskRef:
+        kind: Task
+        name: update-commit-status
+  # ------------ FETCH REPOSITORY ------------ #
+    - name: fetch-repository
+      runAfter:
+        - git-status-pending
+      params:
+        - name: url
+          value: $(params.GIT_URL)/$(params.GIT_USER)/$(params.GIT_REPO)
+        - name: revision
+          value: $(params.GIT_COMMIT)
+        - name: subdirectory
+          value: source-code/$(params.GIT_REPO)
+        - name: deleteExisting
+          value: 'true'
+      taskRef:
+        kind: ClusterTask
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: workspace
+    # ------------ TEST LINT------------ #
+    - name: ansible-lint-test
+      runAfter:
+        - fetch-repository
+      taskRef:
+        kind: Task
+        name: ansible-lint
+      params:
+        - name: COLLECTION_NAME
+          value: $(params.GIT_REPO)
+        - name: CODE_DIR
+          value: source-code
+      workspaces:
+        - name: working-dir
+          workspace: workspace
+    # ------------ TEST MOLECULE ------------ #
+    - name: ansible-molecule-test
+      runAfter:
+        - ansible-lint-test
+      taskRef:
+        kind: Task
+        name: molecule-test
+      params:
+        - name: COLLECTION_NAME
+          value: $(params.GIT_REPO)
+        - name: CODE_DIR
+          value: source-code
+      workspaces:
+        - name: working-dir
+          workspace: workspace
+  workspaces:
+    - name: workspace
+

@@ -1,0 +1,65 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: update-commit-status
+  namespace: automation-cicd
+  annotations:
+    description: |
+      Updates a commit status in Git.
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  stepTemplate:
+    env:
+      - name: "HOME"
+        value: "/tekton/home"
+  params:
+    - name: CONTEXT_REF
+      description: Context reference for git
+      type: string
+    - name: CONTEXT_DESC
+      description: Context description for git
+      type: string
+    - name: CONTEXT_STATUS
+      description: Context status (It can be "pending", "success", "error", "failure", and "warning")
+      type: string
+    - name: CONTEXT_TARGET_URL
+      description: Context target url
+      type: string
+    - name: GIT_URL
+      description: Git server
+      type: string
+    - name: GIT_USER
+      description: Git user
+      type: string
+    - name: GIT_REPO
+      description: Git repository
+      type: string
+    - name: GIT_COMMIT
+      description: Git commit reference
+      type: string
+  steps:
+    - name: update-status
+      image: quay.io/calopezb/git-utils:1.0.0
+      script: |
+
+        # Create pr body
+        cat <<EOF > /tmp/pr.json
+        {
+          "context": "$(params.CONTEXT_REF)",
+          "description": "$(params.CONTEXT_DESC)",
+          "state": "$(params.CONTEXT_STATUS)",
+          "target_url": "$(params.CONTEXT_TARGET_URL)"
+        }
+        EOF
+        cat /tmp/pr.json
+
+        RESPONSE=$(curl -o /dev/null -s -w "%{http_code}\n" -X POST \
+          -u cicd-aide:cicd-aide \
+          -d @/tmp/pr.json \
+          -H "Content-Type: application/json" \
+          $(params.GIT_URL)/api/v1/repos/$(params.GIT_USER)/$(params.GIT_REPO)/statuses/$(params.GIT_COMMIT))
+
+        if [ "$RESPONSE" != "201" ]; then
+          echo "Error updating status, error code: $RESPONSE"
+          exit 1
+        fi
