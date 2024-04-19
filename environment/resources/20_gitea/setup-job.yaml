@@ -116,9 +116,9 @@ spec:
           echo "-- Create PR Hook in applications collection repository --"
           RESPONSE=$(curl -o /dev/null -s -w "%{http_code}\n" -X POST \
             -u gitea:openshift \
-            -d '{"active": true,"branch_filter": "master","config": {"content_type": "json","url": "test"},"events": ["pull_request"],"type": "gitea"}' \
+            -d '{"active": true,"branch_filter": "master","config": {"content_type": "json","url": "http://el-trigger-collection-pull-request.svc.cluster.local:8080"},"events": ["pull_request"],"type": "gitea"}' \
             -H "Content-Type: application/json" \
-            http://$GITEA_HOSTNAME/api/v1/repos/gitea/operations.applications/hook)
+            http://$GITEA_HOSTNAME/api/v1/repos/gitea/operations.applications/hooks)
 
           if [ "$RESPONSE" != "201" ]; then
               echo "Error protecting master branch, error code: $RESPONSE"
