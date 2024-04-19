@@ -1,5 +1,5 @@
 ---
-- name: Create
+- name: Destroy
   hosts: localhost
   gather_facts: false
   vars:
@@ -7,19 +7,18 @@
     app_image: "openshift/hello-openshift:latest"
     app_port: "8080"
     content_output: "Hello OpenShift!"
-
   tasks:
 
     - name: Include role vars
       ansible.builtin.include_vars:
-        file: ../../vars/main.yml
+        file: ../../roles/test_app/vars/main.yml
 
-    - name: Create namespace
+    - name: Destroy namespace
       kubernetes.core.k8s:
         definition:
           apiVersion: v1
           kind: Namespace
           metadata:
             name: "{{ app_namespace }}"
-        state: present
+        state: absent
         validate_certs: false
