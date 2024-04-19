@@ -102,11 +102,23 @@ spec:
           fi
 
           echo "-- Protecting master branch in applications collection repository --"
-          RESPONSE=$(curl -o /dev/null -s -w "%{http_code}\n" -X PUT \
+          RESPONSE=$(curl -o /dev/null -s -w "%{http_code}\n" -X POST \
             -u gitea:openshift \
             -d '{"branch_name": "master","dismiss_stale_approvals": true, "enable_push": false, "enable_status_check": true,"status_check_contexts": [ "collection-pr-validation"]}' \
             -H "Content-Type: application/json" \
             http://$GITEA_HOSTNAME/api/v1/repos/gitea/operations.applications/branch_protections)
+
+          if [ "$RESPONSE" != "201" ]; then
+              echo "Error protecting master branch, error code: $RESPONSE"
+              exit 1
+          fi
+
+          echo "-- Create PR Hook in applications collection repository --"
+          RESPONSE=$(curl -o /dev/null -s -w "%{http_code}\n" -X POST \
+            -u gitea:openshift \
+            -d '{"active": true,"branch_filter": "master","config": {"content_type": "json","url": "test"},"events": ["pull_request"],"type": "gitea"}' \
+            -H "Content-Type: application/json" \
+            http://$GITEA_HOSTNAME/api/v1/repos/gitea/operations.applications/hook)
 
           if [ "$RESPONSE" != "201" ]; then
               echo "Error protecting master branch, error code: $RESPONSE"
