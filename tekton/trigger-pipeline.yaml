@@ -1,0 +1,72 @@
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: sample-collection-ci
+  namespace: ansible-dev
+spec:
+  triggers:
+    - name: github-listener
+      interceptors:
+        - ref:
+            name: github
+            kind: ClusterInterceptor
+            apiVersion: triggers.tekton.dev
+          params:
+            - name: eventTypes
+              value:
+                - push
+      template:
+        ref: sample-collection-ci
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: sample-collection-ci
+  namespace: ansible-dev
+spec:
+  params:
+  - name: gitRepositoryUrl
+  - name: gitRevision
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1
+    kind: PipelineRun
+    metadata:
+      namespace: ansible-dev
+      generateName: "sample-collection-ci-"
+      labels:
+        app.kubernetes.io/instance: sample-collection-ci
+        app.kubernetes.io/name: sample-collection-ci
+        operator.tekton.dev/operand-name: openshift-pipelines-addons
+        pipeline.openshift.io/runtime: ansible
+        pipeline.openshift.io/type: kubernetes
+        tekton.dev/pipeline: sample-collection-ci
+    spec:
+      params:
+        - name: GIT_REPO
+          value: 'https://github.com/zaskan/ansible-devspaces-demo.git'
+        - name: GIT_REVISION
+          value: live-demo
+        - name: MOLECULE_COMMAND
+          value: 'DEVWORKSPACE_NAMESPACE=ansible-dev molecule test'
+        - name: PROJECT_ROOT
+          value: ansible-devspaces-demo
+        - name: MOLECULE_PATH
+          value: collections/ansible_collections/sample_namespace/sample_collection/extensions
+      pipelineRef:
+        name: collection-ci
+      taskRunTemplate:
+        serviceAccountName: pipeline
+      timeouts:
+        pipeline: 1h0m0s
+      workspaces:
+        - name: workspace
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 50Mi
+              storageClassName: managed-nfs-storage
+              volumeMode: Filesystem
