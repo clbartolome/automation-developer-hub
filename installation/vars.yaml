@@ -1,0 +1,23 @@
+---
+# Required namespaces (operators namespaces must NOT be also included here)
+namespaces:
+  - name: ansible-dev
+
+gitea:
+  namespace: gitea
+  ocp_domain: "{{ ocp_host }}"
+  repositories:
+    - name: ansible-devspaces-demo
+      url: https://github.com/zaskan/ansible-devspaces-demo.git
+      branch: main
+      path: ""
+  users: []
+
+argo:
+  ocp_domain: "{{ ocp_host }}"
+  target_namespaces: # Namespaces where ArgoCD will create resources
+    - name: ansible-dev
+  environment_repo_url: https://github.com/clbartolome/automation-developer-hub.git
+  environment_repo_revision: draft_resources
+  environment_path: environment/* # Will create an app for each directory in this path
+  

@@ -1,0 +1,117 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  generation: 1
+  labels:
+  # TODO: update labels
+    app.kubernetes.io/instance: collection-ci
+    app.kubernetes.io/name: collection-ci
+    operator.tekton.dev/operand-name: openshift-pipelines-addons
+    pipeline.openshift.io/runtime: ansible
+    pipeline.openshift.io/type: kubernetes
+  name: collection-ci
+  namespace: ansible-dev
+spec:
+  params:
+    - name: GIT_REPO
+      type: string
+    - name: GIT_REVISION
+      type: string
+    - name: PROJECT_ROOT
+      type: string
+    - name: MOLECULE_PATH
+      type: string
+    - name: MOLECULE_COMMAND
+      type: string
+    - name: CONFIGURATION_SECRET
+      type: string
+      default: ci-config
+  workspaces: 
+    - workspace
+  tasks:
+     # ------------ GET PIPELINERUN URL (console) ------------ #
+    - name: get-pipelinerun-url
+      params:
+        - name: PIPELINERUN_UID
+          value: $(context.pipelineRun.name)
+      taskRef:
+        kind: Task
+        name: pipelinerun-url
+    # ------------ FETCH REPOSITORY ------------ #
+    - name: fetch-repository
+      runAfter:
+        - get-pipelinerun-url
+      taskRef:
+        resolver: cluster
+        params:
+        - name: kind
+          value: task
+        - name: name
+          value: git-clone
+        - name: namespace
+          value: openshift-pipelines
+      params:
+        - name: URL
+          value: $(params.GIT_REPO)
+        - name: REVISION
+          value: $(params.GIT_REVISION)
+        - name: SUBDIRECTORY
+          value: $(params.PROJECT_ROOT)
+        - name: DELETE_EXISTING
+          value: 'true'
+      workspaces:
+        - name: output
+          workspace: workspace
+    # ------------ LINT ANALYSIS ------------ #
+    # - name: lint-test
+    #   runAfter:
+    #     - fetch-repository
+    #   taskRef:
+    #     name: lint
+    #   params:
+    #     - name: PROJECT_ROOT
+    #       value: $(params.PROJECT_ROOT)
+    #     - name: LINT_TEST_PATH
+    #       value: collections/ansible_collections/sample_namespace/sample_collection/roles/backup_file/tasks/
+    #   workspaces:
+    #     - name: source
+    #       workspace: workspace
+    # # ------------ MOLECULE TEST ------------ #
+    # - name: molecule-test
+    #   runAfter:
+    #     - fetch-repository
+    #   taskRef:
+    #     name: molecule
+    #   params:
+    #     - name: MOLECULE_COMMAND
+    #       value: $(params.MOLECULE_COMMAND)
+    #     - name: PROJECT_ROOT
+    #       value: $(params.PROJECT_ROOT)
+    #     - name: MOLECULE_PATH
+    #       value: $(params.MOLECULE_PATH)
+    #   workspaces:
+    #     - name: source
+    #       workspace: workspace
+    # ------------ CREATE RELEASE ------------ #
+    - name: git-release
+      runAfter:
+        - fetch-repository
+      taskRef:
+        kind: Task
+        name: git-release
+      params:
+        - name: GIT_REPO
+          value: "$(params.GIT_REPO)"
+        - name: PATH_CONTEXT
+          value: $(params.PROJECT_ROOT)
+        - name: VERSION
+          value: "1.0.0-4"
+        - name: CONFIGURATION_SECRET
+          value: "$(params.CONFIGURATION_SECRET)"
+        - name: PIPELINERUN_URL
+          value: "$(tasks.get-pipelinerun-url.results.PIPELINERUN_URL)"
+      workspaces:
+        - name: source
+          workspace: workspace
+  workspaces:
+    - name: workspace
