@@ -110,6 +110,7 @@ spec:
         - collection-info
         - molecule-test
         - lint-test
+        - get-pipelinerun-url
       taskRef:
         kind: Task
         name: git-release
