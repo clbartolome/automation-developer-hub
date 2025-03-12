@@ -19,7 +19,7 @@ spec:
       type: string
     - name: PROJECT_ROOT
       type: string
-    - name: MOLECULE_PATH
+    - name: COLLECTION_PATH
       type: string
     - name: MOLECULE_COMMAND
       type: string
@@ -39,8 +39,6 @@ spec:
         name: pipelinerun-url
     # ------------ FETCH REPOSITORY ------------ #
     - name: fetch-repository
-      runAfter:
-        - get-pipelinerun-url
       taskRef:
         resolver: cluster
         params:
@@ -63,39 +61,55 @@ spec:
         - name: output
           workspace: workspace
     # ------------ LINT ANALYSIS ------------ #
-    # - name: lint-test
-    #   runAfter:
-    #     - fetch-repository
-    #   taskRef:
-    #     name: lint
-    #   params:
-    #     - name: PROJECT_ROOT
-    #       value: $(params.PROJECT_ROOT)
-    #     - name: LINT_TEST_PATH
-    #       value: collections/ansible_collections/sample_namespace/sample_collection/roles/backup_file/tasks/
-    #   workspaces:
-    #     - name: source
-    #       workspace: workspace
-    # # ------------ MOLECULE TEST ------------ #
-    # - name: molecule-test
-    #   runAfter:
-    #     - fetch-repository
-    #   taskRef:
-    #     name: molecule
-    #   params:
-    #     - name: MOLECULE_COMMAND
-    #       value: $(params.MOLECULE_COMMAND)
-    #     - name: PROJECT_ROOT
-    #       value: $(params.PROJECT_ROOT)
-    #     - name: MOLECULE_PATH
-    #       value: $(params.MOLECULE_PATH)
-    #   workspaces:
-    #     - name: source
-    #       workspace: workspace
+    - name: collection-info
+      runAfter:
+        - fetch-repository
+      taskRef:
+        name: collection-info
+      params:
+        - name: PROJECT_ROOT
+          value: $(params.PROJECT_ROOT)
+        - name: COLLECTION_PATH
+          value: $(params.COLLECTION_PATH)
+      workspaces:
+        - name: source
+          workspace: workspace
+    # ------------ LINT ANALYSIS ------------ #
+    - name: lint-test
+      runAfter:
+        - fetch-repository
+      taskRef:
+        name: lint
+      params:
+        - name: PROJECT_ROOT
+          value: $(params.PROJECT_ROOT)
+        - name: LINT_TEST_PATH
+          value: $(params.COLLECTION_PATH)/roles/backup_file/tasks/
+      workspaces:
+        - name: source
+          workspace: workspace
+    # ------------ MOLECULE TEST ------------ #
+    - name: molecule-test
+      runAfter:
+        - fetch-repository
+      taskRef:
+        name: molecule
+      params:
+        - name: MOLECULE_COMMAND
+          value: $(params.MOLECULE_COMMAND)
+        - name: PROJECT_ROOT
+          value: $(params.PROJECT_ROOT)
+        - name: MOLECULE_PATH
+          value: $(params.COLLECTION_PATH)/extensions
+      workspaces:
+        - name: source
+          workspace: workspace
     # ------------ CREATE RELEASE ------------ #
     - name: git-release
       runAfter:
-        - fetch-repository
+        - collection-info
+        - molecule-test
+        - lint-test
       taskRef:
         kind: Task
         name: git-release
@@ -104,8 +118,12 @@ spec:
           value: "$(params.GIT_REPO)"
         - name: PATH_CONTEXT
           value: $(params.PROJECT_ROOT)
-        - name: VERSION
-          value: "1.0.0-4"
+        - name: COLLECTION_VERSION
+          value: "$(tasks.collection-info.results.COLLECTION_VERSION)"
+        - name: COLLECTION_NAME
+          value: "$(tasks.collection-info.results.COLLECTION_NAME)"
+        - name: COLLECTION_NAMESPACE
+          value: "$(tasks.collection-info.results.COLLECTION_NAMESPACE)"
         - name: CONFIGURATION_SECRET
           value: "$(params.CONFIGURATION_SECRET)"
         - name: PIPELINERUN_URL

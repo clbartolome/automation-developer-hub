@@ -1,0 +1,40 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: collection-info
+  namespace: ansible-dev
+spec:
+  params:
+    - name: PROJECT_ROOT
+      type: string
+    - name: COLLECTION_PATH
+      type: string
+  workspaces:
+    - name: source
+      description: The workspace where app code has been cloned
+  results:
+    - name: COLLECTION_NAMESPACE
+    - name: COLLECTION_NAME
+    - name: COLLECTION_VERSION
+  steps:
+    - name: get-info
+      image:  registry.redhat.io/ubi9/ubi-minimal:9.5-1741599792
+      workingDir: $(workspaces.source.path)/$(params.PROJECT_ROOT)/$(params.COLLECTION_PATH)
+      script: |
+
+
+        echo "Reading Collection Info..."
+        namespace=$(sed -n 's/^namespace: *//p' galaxy.yml)
+        name=$(sed -n 's/^name: *//p' galaxy.yml)
+        version=$(sed -n 's/^version: *//p' galaxy.yml)
+
+        echo "Namespace: $namespace"
+        echo "Name: $name"
+        echo "Version: $version"
+
+        echo $namespace > /tekton/results/COLLECTION_NAMESPACE
+        echo $name > /tekton/results/COLLECTION_NAME
+        echo $version > /tekton/results/COLLECTION_VERSION
+
+
+
