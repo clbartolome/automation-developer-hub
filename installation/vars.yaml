@@ -1,17 +1,10 @@
 ---
-# Required namespaces (operators namespaces must NOT be also included here)
 namespaces:
   - name: ansible-dev
 
-gitea:
-  namespace: gitea
+kubeconfig:
   ocp_domain: "{{ ocp_host }}"
-  repositories:
-    - name: ansible-devspaces-demo
-      url: https://github.com/zaskan/ansible-devspaces-demo.git
-      branch: main
-      path: ""
-  users: []
+  ocp_api_token: "{{ api_token }}"
 
 argo:
   ocp_domain: "{{ ocp_host }}"

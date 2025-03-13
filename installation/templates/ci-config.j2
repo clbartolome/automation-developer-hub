@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ci-config
+  namespace: ansible-dev
+data:
+  GITHUB_TOKEN: "{{ github_token | b64encode }}"

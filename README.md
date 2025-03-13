@@ -11,14 +11,20 @@ Repository with a collection development and lifecycle with OpenShift DevTools
 > - AAP: 2.5
 
 
-## Requirements
+## Pre-Requisites
 
 - Install **OpenShift GitOps** operator (default config)
 - Install **OpenShift Pipelines** operator (default config)
-- Install **OpenShift DevSpaces** operator (default config)
+- Install **OpenShift DevSpaces** operator (default config) and create an instance of eclipse che
 - Install **Ansible Automation Platform** operator (default config)
+- Build Ansible Execution Environment Manually:
 
+```sh
+cd installation/ansible-navigator
+ansible-builder build -t custom-ee:latest
+```
 
+- Fork repository `https://github.com/zaskan/ansible-devspaces-demo` and generate a token so demo resources can perform actions on it
 
 ## Install
 
@@ -28,11 +34,14 @@ Repository with a collection development and lifecycle with OpenShift DevTools
 
 - Access installation->ansible-navigator: `cd installation/ansible-navigator`
 
-- Create environment vars for configuration:
+- Create environment vars for configuration (**update token**):
 
 ```sh
 export OPENSHIFT_TOKEN=$(oc whoami --show-token)
 export CLUSTER_DOMAIN=$(oc whoami --show-server | sed 's~https://api\.~~' | sed 's~:.*~~')
+export GITHUB_USER=<user>
+export GITHUB_TOKEN=<token>
+export GITHUB_BRANCH=<branch name to be used during demo (will be created and deleted automatically)>
 ```
 
 - Run installation:
@@ -40,47 +49,11 @@ export CLUSTER_DOMAIN=$(oc whoami --show-server | sed 's~https://api\.~~' | sed 
 ```sh
 ansible-navigator run ../install.yaml -m stdout \
     -e "ocp_host=$CLUSTER_DOMAIN" \
-    -e "api_token=$OPENSHIFT_TOKEN"
+    -e "api_token=$OPENSHIFT_TOKEN" \
+    -e "github_user=$GITHUB_USER" \
+    -e "github_token=$GITHUB_TOKEN" \
+    -e "github_branch=$GITHUB_BRANCH"
 ```
 
 
-## SetUp
 
-- Environment:
-    - Create a project named: `ansible-dev`
-    - Install openshift-pipelines
-    - Install devspaces and create a che instance in `ansible-dev` namespace
-
-- Clone and create demo branch
-```sh
-cd /tmp
-git clone git@github.com:zaskan/ansible-devspaces-demo.git
-cd ansible-devspaces-demo
-git checkout -b live-demo
-git push --set-upstream origin live-demo
-```
-
-- Create resources
-```sh
-cd /<demo-code>
-oc project ansible-dev
-oc adm policy add-cluster-role-to-user cluster-reader system:serviceaccount:ansible-dev:pipeline
-
-oc create secret generic ci-config --from-literal=GITHUB_TOKEN=<token>
-
-oc apply -f tekton
-
-oc expose svc el-sample-collection-ci
-oc get route 
-```
-
-- Create a webhook in github pointing to previously created route
-
-- Cleanup demo branch
-```sh
-cd /tmp/ansible-devspaces-demo
-git checkout main
-git branch -D live-demo
-git push origin --delete live-demo
-rm -rf /tmp/ansible-devspaces-demo
-```

@@ -1,0 +1,94 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: el-sample-collection-ci
+  namespace: ansible-dev
+spec:
+  host: trigger-collection-ci.apps.{{ ocp_host }}
+  port:
+    targetPort: http-listener
+  to:
+    kind: Service
+    name: el-sample-collection-ci
+    weight: 100
+  wildcardPolicy: None
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: EventListener
+metadata:
+  name: sample-collection-ci
+  namespace: ansible-dev
+spec:
+  triggers:
+    - name: github-listener
+      interceptors:
+        - ref:
+            name: github
+            kind: ClusterInterceptor
+            apiVersion: triggers.tekton.dev
+          params:
+            - name: eventTypes
+              value:
+                - push
+        - params:	
+            - name: filter	
+              value: body.ref.startsWith('refs/heads/{{ github_branch }}')	
+            - name: overlays	
+              value: null	
+          ref:	
+            kind: ClusterInterceptor	
+            name: cel
+      template:
+        ref: sample-collection-ci
+---
+apiVersion: triggers.tekton.dev/v1alpha1
+kind: TriggerTemplate
+metadata:
+  name: sample-collection-ci
+  namespace: ansible-dev
+spec:
+  params:
+  - name: gitRepositoryUrl
+  - name: gitRevision
+  resourcetemplates:
+  - apiVersion: tekton.dev/v1
+    kind: PipelineRun
+    metadata:
+      namespace: ansible-dev
+      generateName: "sample-collection-ci-"
+      labels:
+        app.kubernetes.io/instance: sample-collection-ci
+        app.kubernetes.io/name: sample-collection-ci
+        operator.tekton.dev/operand-name: openshift-pipelines-addons
+        pipeline.openshift.io/runtime: ansible
+        pipeline.openshift.io/type: kubernetes
+        tekton.dev/pipeline: sample-collection-ci
+    spec:
+      params:
+        - name: GIT_REPO
+          value: 'https://github.com/{{ github_user }}/ansible-devspaces-demo.git'
+        - name: GIT_REVISION
+          value: {{ github_branch }}
+        - name: MOLECULE_COMMAND
+          value: 'DEVWORKSPACE_NAMESPACE=ansible-dev molecule test'
+        - name: PROJECT_ROOT
+          value: ansible-devspaces-demo
+        - name: COLLECTION_PATH
+          value: collections/ansible_collections/sample_namespace/sample_collection
+      pipelineRef:
+        name: collection-ci
+      taskRunTemplate:
+        serviceAccountName: pipeline
+      timeouts:
+        pipeline: 1h0m0s
+      workspaces:
+        - name: workspace
+          volumeClaimTemplate:
+            spec:
+              accessModes:
+                - ReadWriteOnce
+              resources:
+                requests:
+                  storage: 50Mi
+              storageClassName: managed-nfs-storage
+              volumeMode: Filesystem
