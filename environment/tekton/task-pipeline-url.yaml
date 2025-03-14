@@ -2,7 +2,7 @@ apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
   name: pipelinerun-url
-  namespace: ansible-dev
+  #namespace: ansible-dev
 spec:
   params:
   - name: PIPELINERUN_UID
