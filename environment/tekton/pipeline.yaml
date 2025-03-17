@@ -10,7 +10,7 @@ metadata:
     pipeline.openshift.io/runtime: ansible
     pipeline.openshift.io/type: kubernetes
   name: collection-ci
-  #namespace: ansible-dev
+  namespace: ansible-dev
 spec:
   params:
     - name: GIT_REPO
