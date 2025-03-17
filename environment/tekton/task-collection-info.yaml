@@ -24,9 +24,9 @@ spec:
 
 
         echo "Reading Collection Info..."
-        namespace=$(sed -n 's/^namespace: *//p' galaxy.yml)
-        name=$(sed -n 's/^name: *//p' galaxy.yml)
-        version=$(sed -n 's/^version: *//p' galaxy.yml)
+        namespace=$(sed -n 's/^namespace: *//p' galaxy.yml | tr -d '\n')
+        name=$(sed -n 's/^name: *//p' galaxy.yml | tr -d '\n')
+        version=$(sed -n 's/^version: *//p' galaxy.yml | tr -d '\n')
 
         echo "Namespace: $namespace"
         echo "Name: $name"
