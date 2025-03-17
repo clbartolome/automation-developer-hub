@@ -17,24 +17,66 @@ spec:
     - name: COLLECTION_NAME
     - name: COLLECTION_VERSION
   steps:
-    - name: get-info
-      image:  registry.redhat.io/ubi9/ubi-minimal:9.5-1741599792
-      workingDir: $(workspaces.source.path)/$(params.PROJECT_ROOT)/$(params.COLLECTION_PATH)
+    - name: create-info-playbook
+      image:  quay.io/zaskan/ansible-dev-tools:1.0
+      workingDir: $(workspaces.source.path)
       script: |
+        echo "Getting collection info..."
+        cat <<EOF > get-info.yaml
+        ---
+        - name: Push collection to automation hub
+          gather_facts: false
+          hosts: localhost
+          tasks:
+
+            - name: Read galaxy.yml file
+              ansible.builtin.slurp:
+                src: "$(params.PROJECT_ROOT)/$(params.COLLECTION_PATH)/galaxy.yml"
+              register: galaxy_yml
+
+            - name: Parse galaxy.yml content
+              ansible.builtin.set_fact:
+                galaxy_content: "{{ galaxy_yml.content | b64decode | from_yaml }}"
+
+            - name: Set extracted variables
+              ansible.builtin.set_fact:
+                namespace: "{{ galaxy_content.namespace | regex_replace('[^A-Za-z0-9_]', '') }}"
+                name: "{{ galaxy_content.name | regex_replace('[^A-Za-z0-9_]', '') }}"
+                version: "{{ galaxy_content.version | regex_replace('[^A-Za-z0-9_.]', '') }}"
+
+            - name: Display extracted variables
+              ansible.builtin.debug:
+                msg:
+                  - "Namespace: {{ namespace }}"
+                  - "Name: {{ name }}"
+                  - "Version: {{ version }}"
+
+            - name: Write namespace to COLLECTION_NAMESPACE
+              ansible.builtin.copy:
+                content: "{{ namespace }}\n"
+                dest: /tekton/results/COLLECTION_NAMESPACE
+
+            - name: Write name to COLLECTION_NAME
+              ansible.builtin.copy:
+                content: "{{ name }}\n"
+                dest: /tekton/results/COLLECTION_NAME
+
+            - name: Write version to COLLECTION_VERSION
+              ansible.builtin.copy:
+                content: "{{ version }}\n"
+                dest: /tekton/results/COLLECTION_VERSION
+
+        EOF
+
+    - name: get-info
+      image: quay.io/zaskan/ansible-dev-tools:1.0
+      workingDir: $(workspaces.source.path)
+      script: |
+        ansible-playbook get-info.yaml
 
 
-        echo "Reading Collection Info..."
-        namespace=$(sed -n 's/^namespace: *//p' galaxy.yml | sed 's/[^A-Za-z0-9_]//g')
-        name=$(sed -n 's/^name: *//p' galaxy.yml | sed 's/[^A-Za-z0-9_]//g')
-        version=$(sed -n 's/^version: *//p' galaxy.yml | sed 's/[^A-Za-z0-9_.]//g')
 
-        echo "Namespace: $namespace"
-        echo "Name: $name"
-        echo "Version: $version"
 
-        echo $namespace > /tekton/results/COLLECTION_NAMESPACE
-        echo $name > /tekton/results/COLLECTION_NAME
-        echo $version > /tekton/results/COLLECTION_VERSION
 
 
 
