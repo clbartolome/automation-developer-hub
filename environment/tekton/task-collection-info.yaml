@@ -53,17 +53,17 @@ spec:
 
             - name: Write namespace to COLLECTION_NAMESPACE
               ansible.builtin.copy:
-                content: "{{ namespace }}\n"
+                content: "{{ namespace }}"
                 dest: /tekton/results/COLLECTION_NAMESPACE
 
             - name: Write name to COLLECTION_NAME
               ansible.builtin.copy:
-                content: "{{ name }}\n"
+                content: "{{ name }}"
                 dest: /tekton/results/COLLECTION_NAME
 
             - name: Write version to COLLECTION_VERSION
               ansible.builtin.copy:
-                content: "{{ version }}\n"
+                content: "{{ version }}"
                 dest: /tekton/results/COLLECTION_VERSION
 
         EOF
