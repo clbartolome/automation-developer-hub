@@ -1,0 +1,16 @@
+---
+namespaces:
+  - name: ansible-dev
+
+kubeconfig:
+  ocp_domain: "{{ ocp_host }}"
+  ocp_api_token: "{{ api_token }}"
+
+argo:
+  ocp_domain: "{{ ocp_host }}"
+  target_namespaces: # Namespaces where ArgoCD will create resources
+    - name: ansible-dev
+  environment_repo_url: https://github.com/clbartolome/automation-developer-hub.git
+  environment_repo_revision: draft_resources
+  environment_path: environment/* # Will create an app for each directory in this path
+  

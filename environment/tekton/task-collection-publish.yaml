@@ -1,0 +1,79 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: publish
+  namespace: ansible-dev
+spec:
+  params:
+    - name: PROJECT_ROOT
+      type: string
+      default: ansible-playbook
+    - name: CONFIGURATION_SECRET
+      type: string
+    - name: COLLECTION_VERSION
+      type: string
+    - name: COLLECTION_NAME
+      type: string
+    - name: COLLECTION_NAMESPACE
+      type: string
+    - name: COLLECTION_PATH
+      type: string
+  workspaces:
+    - name: source
+      description: The workspace where app code has been cloned
+  stepTemplate:
+    envFrom:
+      - secretRef:
+          name: $(params.CONFIGURATION_SECRET)
+  steps:
+    - name: playbook
+      image: quay.io/zaskan/ansible-dev-tools:1.0
+      workingDir: $(workspaces.source.path)
+      script: |
+        echo "Generating publishing playbook..."
+        cat <<EOF > publish.yaml
+        ---
+        - name: Push collection to automation hub
+          gather_facts: false
+          hosts: localhost
+          tasks:
+
+            - name: Create Namespace
+              ansible.hub.ah_namespace:
+                name: "$(params.COLLECTION_NAMESPACE)"
+                company: Redhat
+                email: ansible@redhat.com
+                description: "This is the test Namespace"
+                links:
+                  - name: "homepage"
+                    url: "https://www.redhat.com"
+                validate_certs: false
+
+            - name: Build Collection Artifact
+              ansible.hub.ah_build:
+                path: "$(params.PROJECT_ROOT)/$(params.COLLECTION_PATH)"
+                force: true
+                output_path: "/tmp"
+              register: artifact
+
+            - name: Upload collection to automation hub
+              ansible.hub.ah_collection_upload:
+                path: "{{ artifact.path }}"
+                validate_certs: false
+
+            - name: Approve collection
+              ansible.hub.ah_approval:
+                namespace: "{{ '$(params.COLLECTION_NAMESPACE)' | regex_replace('[^A-Za-z0-9_]', '') }}"
+                name: "{{ '$(params.COLLECTION_NAME)' | regex_replace('[^A-Za-z0-9_]', '') }}"
+                version: "{{ '$(params.COLLECTION_VERSION)' | regex_replace('[^A-Za-z0-9_.]', '') }}"
+                validate_certs: false
+                request_timeout: 10
+              register: output
+        EOF
+
+    - name: publish
+      image: quay.io/zaskan/ansible-dev-tools:1.0
+      workingDir: $(workspaces.source.path)
+      script: |
+        ansible-playbook publish.yaml
+      

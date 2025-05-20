@@ -1,0 +1,72 @@
+---
+- name: Uninstallation
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+
+    - name: Setup kubeconfig file
+      ansible.builtin.include_role:
+        name: demos.utils.kubeconfig
+
+    - name: Remove demo environment on ArgoCD
+      kubernetes.core.k8s:
+        state: absent
+        api_version: argoproj.io/v1alpha1
+        kind: ApplicationSet
+        namespace: openshift-gitops
+        name: environment
+
+    - name: Small pause # (TODO: use argoCD instead of this sh**)
+      ansible.builtin.pause:
+        minutes: 5
+
+    - name: Delete Demo namespaces
+      kubernetes.core.k8s:
+        state: absent
+        definition:
+          apiVersion: project.openshift.io/v1
+          kind: Project
+          metadata:
+            name: "{{ namespace.name }}"
+      loop: "{{ namespaces }}"
+      loop_control:
+        loop_var: namespace
+
+    - name: Fetch all repository webhooks
+      uri:
+        url: "https://api.github.com/repos/{{ github_user }}/ansible-devspaces-demo/hooks"
+        method: GET
+        headers:
+          Authorization: "token {{ github_token }}"
+          Accept: "application/vnd.github.v3+json"
+      register: webhooks_response
+
+    - name: Delete matching GitHub webhooks
+      uri:
+        url: "https://api.github.com/repos/{{ github_user }}/ansible-devspaces-demo/hooks/{{ item.id }}"
+        method: DELETE
+        headers:
+          Authorization: "token {{ github_token }}"
+          Accept: "application/vnd.github.v3+json"
+        status_code: [204, 404]
+      loop: "{{ webhooks_response.json | selectattr('config.url', 'search', 'trigger-collection-ci') | list }}"
+      loop_control:
+        label: "Deleting webhook ID {{ item.id }} ({{ item.config.url }})"
+
+    - name: Delete remote branch on GitHub
+      uri:
+        url: "https://api.github.com/repos/{{ github_user }}/ansible-devspaces-demo/git/refs/heads/{{ github_branch }}"
+        method: DELETE
+        headers:
+          Authorization: "token {{ github_token }}"
+          Accept: "application/vnd.github.v3+json"
+        status_code: [204, 404]
+      vars:
+        github_user: "{{ github_user }}"
+        github_repo: "ansible-devspaces-demo"
+        branch_name: "{{ github_branch }}"
+        github_token: "{{ github_token }}"
+
+  vars_files:
+    - vars.yaml

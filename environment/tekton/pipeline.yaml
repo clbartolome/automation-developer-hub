@@ -1,0 +1,176 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  generation: 1
+  labels:
+  # TODO: update labels
+    app.kubernetes.io/instance: collection-ci
+    app.kubernetes.io/name: collection-ci
+    operator.tekton.dev/operand-name: openshift-pipelines-addons
+    pipeline.openshift.io/runtime: ansible
+    pipeline.openshift.io/type: kubernetes
+  name: collection-ci
+  namespace: ansible-dev
+spec:
+  params:
+    - name: GIT_REPO
+      type: string
+    - name: GIT_REVISION
+      type: string
+    - name: PROJECT_ROOT
+      type: string
+    - name: COLLECTION_PATH
+      type: string
+    - name: MOLECULE_COMMAND
+      type: string
+    - name: CONFIGURATION_SECRET
+      type: string
+      default: ci-config
+  workspaces: 
+    - workspace
+  tasks:
+    # ------------ GET PIPELINERUN URL (console) ------------ #
+    - name: get-pipelinerun-url
+      params:
+        - name: PIPELINERUN_UID
+          value: $(context.pipelineRun.name)
+      taskRef:
+        kind: Task
+        name: pipelinerun-url
+    # ------------ FETCH REPOSITORY ------------ #
+    - name: fetch-repository
+      taskRef:
+        resolver: cluster
+        params:
+        - name: kind
+          value: task
+        - name: name
+          value: git-clone
+        - name: namespace
+          value: openshift-pipelines
+      params:
+        - name: URL
+          value: $(params.GIT_REPO)
+        - name: REVISION
+          value: $(params.GIT_REVISION)
+        - name: SUBDIRECTORY
+          value: $(params.PROJECT_ROOT)
+        - name: DELETE_EXISTING
+          value: 'true'
+      workspaces:
+        - name: output
+          workspace: workspace
+    # ------------ GET COLLECTION INFO ------------ #
+    - name: collection-info
+      runAfter:
+        - fetch-repository
+      taskRef:
+        name: collection-info
+      params:
+        - name: PROJECT_ROOT
+          value: $(params.PROJECT_ROOT)
+        - name: COLLECTION_PATH
+          value: $(params.COLLECTION_PATH)
+      workspaces:
+        - name: source
+          workspace: workspace
+    # ------------ LINT ANALYSIS ------------ #
+    - name: lint-test
+      runAfter:
+        - fetch-repository
+        - get-pipelinerun-url
+        - collection-info
+      taskRef:
+        name: lint
+      params:
+        - name: PROJECT_ROOT
+          value: $(params.PROJECT_ROOT)
+        - name: LINT_TEST_PATH
+          value: $(params.COLLECTION_PATH)/roles/backup_file/tasks/
+      workspaces:
+        - name: source
+          workspace: workspace
+    # ------------ MOLECULE TEST ------------ #
+    - name: molecule-test
+      runAfter:
+        - fetch-repository
+        - get-pipelinerun-url
+        - collection-info
+      taskRef:
+        name: molecule
+      params:
+        - name: MOLECULE_COMMAND
+          value: $(params.MOLECULE_COMMAND)
+        - name: PROJECT_ROOT
+          value: $(params.PROJECT_ROOT)
+        - name: MOLECULE_PATH
+          value: $(params.COLLECTION_PATH)/extensions
+      workspaces:
+        - name: source
+          workspace: workspace
+    - name: molecule-test-destroy
+      runAfter:
+        - molecule-test
+      taskRef:
+        name: molecule
+      params:
+        - name: MOLECULE_COMMAND
+          value: 'DEVWORKSPACE_NAMESPACE=ansible-dev molecule destroy'
+        - name: PROJECT_ROOT
+          value: $(params.PROJECT_ROOT)
+        - name: MOLECULE_PATH
+          value: $(params.COLLECTION_PATH)/extensions
+      workspaces:
+        - name: source
+          workspace: workspace
+    # ------------ PUBLISH COLLECTION------------ #
+    - name: publish-collection
+      runAfter:
+        - molecule-test-destroy
+        - lint-test
+      taskRef:
+        name: publish
+      params:
+        - name: COLLECTION_VERSION
+          value: "$(tasks.collection-info.results.COLLECTION_VERSION)"
+        - name: COLLECTION_NAME
+          value: "$(tasks.collection-info.results.COLLECTION_NAME)"
+        - name: COLLECTION_NAMESPACE
+          value: "$(tasks.collection-info.results.COLLECTION_NAMESPACE)"
+        - name: PROJECT_ROOT
+          value: "$(params.PROJECT_ROOT)"
+        - name: COLLECTION_PATH
+          value: $(params.COLLECTION_PATH)
+        - name: CONFIGURATION_SECRET
+          value: "$(params.CONFIGURATION_SECRET)"
+      workspaces:
+        - name: source
+          workspace: workspace
+    # ------------ CREATE RELEASE ------------ #
+    - name: git-release
+      runAfter:
+        - publish-collection
+      taskRef:
+        kind: Task
+        name: git-release
+      params:
+        - name: GIT_REPO
+          value: "$(params.GIT_REPO)"
+        - name: PATH_CONTEXT
+          value: $(params.PROJECT_ROOT)
+        - name: COLLECTION_VERSION
+          value: "$(tasks.collection-info.results.COLLECTION_VERSION)"
+        - name: COLLECTION_NAME
+          value: "$(tasks.collection-info.results.COLLECTION_NAME)"
+        - name: COLLECTION_NAMESPACE
+          value: "$(tasks.collection-info.results.COLLECTION_NAMESPACE)"
+        - name: CONFIGURATION_SECRET
+          value: "$(params.CONFIGURATION_SECRET)"
+        - name: PIPELINERUN_URL
+          value: "$(tasks.get-pipelinerun-url.results.PIPELINERUN_URL)"
+      workspaces:
+        - name: source
+          workspace: workspace
+
+  workspaces:
+    - name: workspace

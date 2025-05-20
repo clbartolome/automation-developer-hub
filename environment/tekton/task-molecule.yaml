@@ -1,0 +1,79 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: molecule
+  namespace: ansible-dev
+spec:
+  params:
+    - name: PROJECT_ROOT
+      type: string
+    - name: MOLECULE_PATH
+      type: string
+    - name: MOLECULE_COMMAND
+      type: string
+      default: molecule test
+  workspaces:
+    - name: source
+      description: The workspace where app code has been cloned
+  steps:
+    - name: generate-kubeconfig
+      image: registry.redhat.io/openshift4/ose-cli:latest  # Official OpenShift CLI image
+      script: |
+        #!/bin/sh
+        set -e  # Exit on error
+
+        echo "Generating kubeconfig..."
+
+        # Ensure the .kube directory exists
+        mkdir -p $(workspaces.source.path)/.kube
+
+        # Extract OpenShift API server URL and Service Account Token
+        SERVER=$(oc whoami --show-server)
+        TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+
+        # Create minimal kubeconfig
+        cat <<EOF > $(workspaces.source.path)/.kube/config
+        apiVersion: v1
+        kind: Config
+        clusters:
+        - cluster:
+            server: $SERVER
+            insecure-skip-tls-verify: true
+          name: openshift-cluster
+        contexts:
+        - context:
+            cluster: openshift-cluster
+            user: pipeline
+          name: pipeline-context
+        current-context: pipeline-context
+        users:
+        - name: pipeline
+          user:
+            token: $TOKEN
+        EOF
+
+        echo "Kubeconfig generated at $(workspaces.source.path)/.kube/config"
+
+    - name: run-molecule
+      image: ghcr.io/ansible/community-ansible-dev-tools:v25.2.1 # v25.2.1
+      workingDir: /workdir
+      script: |
+
+        echo "Configuring ansible dev tools..."
+
+        # Copy code
+        cp -r $(workspaces.source.path)/$(params.PROJECT_ROOT) /workdir
+        
+        # Configure kubeconfig
+        mkdir /root/.kube
+        cp $(workspaces.source.path)/.kube/config /root/.kube/
+
+        # Set up variables and dependencies
+        touch /root/.bashrc
+        export ANSIBLE_COLLECTIONS_PATH='~/.ansible/collections:/usr/share/ansible/collections:/workdir/$(params.PROJECT_ROOT)/collections'
+        pip install -r /workdir/$(params.PROJECT_ROOT)/requirements.txt 
+
+        echo "Running Molecule Command"
+
+        cd /workdir/$(params.PROJECT_ROOT)/$(params.MOLECULE_PATH)
+        source $HOME/.bashrc && $(params.MOLECULE_COMMAND)

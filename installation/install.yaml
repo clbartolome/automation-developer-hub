@@ -1,0 +1,84 @@
+---
+- name: Installation
+  hosts: localhost
+  gather_facts: false
+
+  tasks:
+
+    - name: Setup kubeconfig file
+      ansible.builtin.include_role:
+        name: demos.utils.kubeconfig
+
+    - name: Create Demo namespaces
+      kubernetes.core.k8s:
+        state: present
+        definition:
+          apiVersion: project.openshift.io/v1
+          kind: Project
+          metadata:
+            name: "{{ namespace.name }}"
+      loop: "{{ namespaces }}"
+      loop_control:
+        loop_var: namespace
+
+    - name: Configure ArgoCD
+      ansible.builtin.include_role:
+        name: demos.utils.argocd
+
+
+    - name: Render all templates to YAML
+      ansible.builtin.template:
+        src: "{{ item }}"
+        dest: "/tmp/{{ item | basename | replace('.j2', '.yaml') }}"
+      with_fileglob:
+        - templates/*.j2
+
+    - name: Create templated resources
+      kubernetes.core.k8s:
+        state: present
+        definition: "{{ lookup('file', '/tmp/' + item ) | from_yaml_all }}"
+      loop:
+        - ci-config.yaml
+        - pipeline-trigger.yaml
+
+    - name: Clone demo repository
+      ansible.builtin.git:
+        repo: "https://github.com/{{ github_user }}/ansible-devspaces-demo"
+        dest: "/tmp/ansible-devspaces-demo"
+        version: main
+        force: yes
+        single_branch: yes
+
+    - name: Create demo branch in GitHub
+      ansible.builtin.command: git checkout -b {{ github_branch }}
+      args:
+        chdir: "/tmp/ansible-devspaces-demo"
+
+    - name: Create demo branch in GitHub
+      ansible.builtin.command: git push -u https://{{ github_token }}@github.com/{{ github_user }}/ansible-devspaces-demo.git {{ github_branch }}
+      args:
+        chdir: "/tmp/ansible-devspaces-demo"
+
+    - name: Create webhook
+      ansible.builtin.uri: 
+        url: "https://api.github.com/repos/{{ github_user }}/ansible-devspaces-demo/hooks"
+        method: POST
+        headers:
+          Authorization: "Bearer {{ github_token }}"
+          X-GitHub-Api-Version: "2022-11-28"
+          Accept: "application/vnd.github+json"
+        body_format: json
+        body:
+          name: "web"
+          active: true
+          events: ["push"]
+          config:
+            url: "http://trigger-collection-ci.apps.{{ ocp_host }}"
+            content_type: "json"
+            insecure_ssl: "0"
+        status_code: [201]
+        follow_redirects: all
+        validate_certs: false   
+
+  vars_files:
+    - vars.yaml
