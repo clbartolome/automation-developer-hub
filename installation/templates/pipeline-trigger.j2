@@ -90,5 +90,5 @@ spec:
               resources:
                 requests:
                   storage: 50Mi
-              storageClassName: managed-nfs-storage
+              storageClassName: {{ default_storage_class }}
               volumeMode: Filesystem

@@ -90,6 +90,57 @@ spec:
       workspaces:
         - name: source
           workspace: workspace
+      # ------------ SANITY ANALYSIS ------------ #
+    - name: sanity-test
+      runAfter:
+        - fetch-repository
+        - get-pipelinerun-url
+        - collection-info
+        - lint-test
+      taskRef:
+        name: sanity
+      params:
+        - name: PROJECT_ROOT
+          value: $(params.PROJECT_ROOT)
+        - name: SANITY_TEST_PATH
+          value: $(params.COLLECTION_PATH)/roles/backup_file/tasks/
+      workspaces:
+        - name: source
+          workspace: workspace
+        # ------------ UNIT ANALYSIS ------------ #
+    - name: unit-test
+      runAfter:
+        - fetch-repository
+        - get-pipelinerun-url
+        - collection-info
+        - sanity-test
+      taskRef:
+        name: unit
+      params:
+        - name: PROJECT_ROOT
+          value: $(params.PROJECT_ROOT)
+        - name: UNIT_TEST_PATH
+          value: $(params.COLLECTION_PATH)/roles/backup_file/tasks/
+      workspaces:
+        - name: source
+          workspace: workspace
+          # ------------ INTEGRATION ANALYSIS ------------ #
+    - name: integration-test
+      runAfter:
+        - fetch-repository
+        - get-pipelinerun-url
+        - collection-info
+        - unit-test
+      taskRef:
+        name: integration
+      params:
+        - name: PROJECT_ROOT
+          value: $(params.PROJECT_ROOT)
+        - name: INTEGRATION_TEST_PATH
+          value: $(params.COLLECTION_PATH)/roles/backup_file/tasks/
+      workspaces:
+        - name: source
+          workspace: workspace
     # ------------ MOLECULE TEST ------------ #
     - name: molecule-test
       runAfter:

@@ -25,11 +25,30 @@
       ansible.builtin.include_role:
         name: demos.utils.argocd
 
+    - name: Configure AAP
+      ansible.builtin.include_role:
+        name: demos.utils.aap_ocp
+
+    - name: Get storage classes
+      kubernetes.core.k8s_info:
+        api_version: storage.k8s.io/v1
+        kind: StorageClass
+      register: storage_classes
+
+    - name: Find default storage class
+      ansible.builtin.set_fact:
+        default_storage_class: "{{ item.metadata.name }}"
+      loop: "{{ storage_classes.resources }}"
+      when:
+        - "'annotations' in item.metadata"
+        - "'storageclass.kubernetes.io/is-default-class' in item.metadata.annotations"
+        - "item.metadata.annotations['storageclass.kubernetes.io/is-default-class'] == 'true'"
 
     - name: Render all templates to YAML
       ansible.builtin.template:
         src: "{{ item }}"
         dest: "/tmp/{{ item | basename | replace('.j2', '.yaml') }}"
+        mode: "0644"
       with_fileglob:
         - templates/*.j2
 
@@ -46,8 +65,8 @@
         repo: "https://github.com/{{ github_user }}/ansible-devspaces-demo"
         dest: "/tmp/ansible-devspaces-demo"
         version: main
-        force: yes
-        single_branch: yes
+        force: true
+        single_branch: true
 
     - name: Create demo branch in GitHub
       ansible.builtin.command: git checkout -b {{ github_branch }}
@@ -60,7 +79,7 @@
         chdir: "/tmp/ansible-devspaces-demo"
 
     - name: Create webhook
-      ansible.builtin.uri: 
+      ansible.builtin.uri:
         url: "https://api.github.com/repos/{{ github_user }}/ansible-devspaces-demo/hooks"
         method: POST
         headers:
@@ -76,9 +95,15 @@
             url: "http://trigger-collection-ci.apps.{{ ocp_host }}"
             content_type: "json"
             insecure_ssl: "0"
-        status_code: [201]
+        status_code:
+          - 201
+          - 422
         follow_redirects: all
-        validate_certs: false   
+        validate_certs: false
+      register: webhook
+      changed_when:
+        - webhook.status == 422
+        - "'already exists' in webhook.json.errors"
 
   vars_files:
     - vars.yaml

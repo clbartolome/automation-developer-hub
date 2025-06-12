@@ -13,4 +13,8 @@ argo:
   environment_repo_url: https://github.com/clbartolome/automation-developer-hub.git
   environment_repo_revision: draft_resources
   environment_path: environment/* # Will create an app for each directory in this path
-  
+
+aap_ocp:
+  ocp_domain: "{{ ocp_host }}"
+  name: aap
+  namespace: aap
