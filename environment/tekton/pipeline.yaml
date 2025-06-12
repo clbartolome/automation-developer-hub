@@ -113,6 +113,7 @@ spec:
         - fetch-repository
         - get-pipelinerun-url
         - collection-info
+        - lint-test
         - sanity-test
       taskRef:
         name: unit
@@ -130,6 +131,8 @@ spec:
         - fetch-repository
         - get-pipelinerun-url
         - collection-info
+        - lint-test
+        - sanity-test
         - unit-test
       taskRef:
         name: integration
@@ -147,6 +150,9 @@ spec:
         - fetch-repository
         - get-pipelinerun-url
         - collection-info
+        - lint-test
+        - sanity-test
+        - unit-test
       taskRef:
         name: molecule
       params:
@@ -177,8 +183,13 @@ spec:
     # ------------ PUBLISH COLLECTION------------ #
     - name: publish-collection
       runAfter:
-        - molecule-test-destroy
+        - fetch-repository
+        - get-pipelinerun-url
+        - collection-info
         - lint-test
+        - sanity-test
+        - unit-test
+        - molecule-test
       taskRef:
         name: publish
       params:
