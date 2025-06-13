@@ -22,7 +22,8 @@ spec:
       script: |
         git config --global --add safe.directory $(workspaces.source.path)/$(params.PROJECT_ROOT)
         echo "Running Unit Test..."
-        pwd
         PYTHONPATH=$(pwd) $(params.UNIT_COMMAND) -v
+        echo "Running Coverage Test..."
+        PYTHONPATH=$(pwd) $(params.UNIT_COMMAND) $(params.COLLECTION_PATH).plugins.modules --cov-report=term-missing
 
 
