@@ -20,7 +20,7 @@ spec:
       workingDir: $(workspaces.source.path)
       script: |
         echo "Setting Git safe directory for: $(workspaces.source.path)/$(params.PROJECT_ROOT)"
-        git config --global --add safe.directory $(workspaces.source.path)/$(params.PROJECT_ROOT)
+        git config --global --add safe.directory /workspace/source/ansible-devspaces-demo
 
     - name: run-sanity
       image: ghcr.io/ansible/community-ansible-dev-tools:v25.2.1 # v25.2.1
