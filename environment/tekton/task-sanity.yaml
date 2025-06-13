@@ -21,8 +21,8 @@ spec:
       image: ghcr.io/ansible/community-ansible-dev-tools:v25.2.1
       workingDir: $(workspaces.source.path)
       script: |
-        echo "Setting Git safe directory for: $(params.PROJECT_ROOT)/$(params.SANITY_TEST_PATH)"
-        git config --global --add safe.directory $(params.PROJECT_ROOT)/$(params.SANITY_TEST_PATH) 
+        echo "Setting Git safe directory for: $(workspaces.source.path)/$(params.PROJECT_ROOT)/$(params.COLLECTION_PATH)"
+        git config --global --add safe.directory $(workspaces.source.path)/$(params.PROJECT_ROOT)/$(params.COLLECTION_PATH) 
 
     - name: run-sanity
       image: ghcr.io/ansible/community-ansible-dev-tools:v25.2.1 # v25.2.1
@@ -31,6 +31,6 @@ spec:
 
         echo "Running Sanity Test..."
 
-        cd $(params.PROJECT_ROOT)/$(params.SANITY_TEST_PATH) 
+        cd $(workspaces.source.path)/$(params.PROJECT_ROOT)/$(params.COLLECTION_PATH)
         $(params.SANITY_COMMAND) 
 
