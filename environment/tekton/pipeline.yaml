@@ -137,6 +137,8 @@ spec:
           value: $(params.PROJECT_ROOT)
         - name: INTEGRATION_TEST_PATH
           value: $(params.COLLECTION_PATH)/roles/backup_file/tasks/
+        - name: COLLECTION_PATH
+          value: $(params.COLLECTION_PATH)
       workspaces:
         - name: source
           workspace: workspace
