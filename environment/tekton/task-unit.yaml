@@ -7,8 +7,6 @@ spec:
   params:
     - name: PROJECT_ROOT
       type: string
-    - name: UNIT_TEST_PATH
-      type: string
     - name: COLLECTION_PATH
       type: string
     - name: UNIT_COMMAND
@@ -24,7 +22,7 @@ spec:
       script: |
         git config --global --add safe.directory $(workspaces.source.path)/$(params.PROJECT_ROOT)
         echo "Running Unit Test..."
-        cd $(params.PROJECT_ROOT)/$(params.UNIT_TEST_PATH)
+        cd $(params.PROJECT_ROOT)/$(params.COLLECTION_PATH)
         $(params.UNIT_COMMAND) -v
         echo "Running Coverage Test..."
         $(params.UNIT_COMMAND) $(params.COLLECTION_PATH).plugins.modules --cov-report=term-missing
