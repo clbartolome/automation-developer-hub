@@ -26,7 +26,7 @@ spec:
       image: ghcr.io/ansible/community-ansible-dev-tools:v25.2.1 # v25.2.1
       workingDir: $(workspaces.source.path)/$(params.PROJECT_ROOT)/collections/ansible_collections/sample_namespace/sample_collection
       script: |
-
+        git config --global --add safe.directory /workspace/source/ansible-devspaces-demo
         echo "Running Sanity Test..."
         $(params.SANITY_COMMAND) 
 
