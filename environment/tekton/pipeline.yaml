@@ -93,7 +93,9 @@ spec:
       # ------------ SANITY ANALYSIS ------------ #
     - name: sanity-test
       runAfter:
-        - lint-test
+        - fetch-repository
+        - get-pipelinerun-url
+        - collection-info
       taskRef:
         name: sanity
       params:
@@ -107,7 +109,9 @@ spec:
         # ------------ UNIT ANALYSIS ------------ #
     - name: unit-test
       runAfter:
-        - sanity-test
+        - fetch-repository
+        - get-pipelinerun-url
+        - collection-info
       taskRef:
         name: unit
       params:
@@ -121,7 +125,9 @@ spec:
           # ------------ INTEGRATION ANALYSIS ------------ #
     - name: integration-test
       runAfter:
-        - unit-test
+        - fetch-repository
+        - get-pipelinerun-url
+        - collection-info
       taskRef:
         name: integration
       params:
@@ -135,7 +141,9 @@ spec:
     # ------------ MOLECULE TEST ------------ #
     - name: molecule-test
       runAfter:
-        - integration-test
+        - fetch-repository
+        - get-pipelinerun-url
+        - collection-info
       taskRef:
         name: molecule
       params:
@@ -166,6 +174,10 @@ spec:
     # ------------ PUBLISH COLLECTION------------ #
     - name: publish-collection
       runAfter:
+        - lint-test
+        - sanity-test
+        - unit-test
+        - integration-test
         - molecule-test
       taskRef:
         name: publish

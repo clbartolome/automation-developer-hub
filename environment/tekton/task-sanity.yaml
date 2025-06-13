@@ -7,6 +7,8 @@ spec:
   params:
     - name: PROJECT_ROOT
       type: string
+    - name: COLLECTION_PATH
+      type: string
     - name: SANITY_COMMAND
       type: string
       default: ansible-test sanity --python 3.13 --local
@@ -14,19 +16,11 @@ spec:
     - name: source
       description: The workspace where app code has been cloned
   steps:
-
-    - name: set-git-safe-directory
-      image: ghcr.io/ansible/community-ansible-dev-tools:v25.2.1
-      workingDir: $(workspaces.source.path)
-      script: |
-        echo "Setting Git safe directory for: $(workspaces.source.path)/$(params.PROJECT_ROOT)"
-        git config --global --add safe.directory /workspace/source/ansible-devspaces-demo
-
     - name: run-sanity
       image: ghcr.io/ansible/community-ansible-dev-tools:v25.2.1 # v25.2.1
-      workingDir: $(workspaces.source.path)/$(params.PROJECT_ROOT)/collections/ansible_collections/sample_namespace/sample_collection
+      workingDir: $(workspaces.source.path)/$(params.PROJECT_ROOT)/$(params.COLLECTION_PATH)
       script: |
-        git config --global --add safe.directory /workspace/source/ansible-devspaces-demo
+        git config --global --add safe.directory $(workspaces.source.path)/$(params.PROJECT_ROOT)
         echo "Running Sanity Test..."
         $(params.SANITY_COMMAND) 
 
