@@ -7,6 +7,8 @@ spec:
   params:
     - name: PROJECT_ROOT
       type: string
+    - name: COLLECTION_PATH
+      type: string
     - name: INTEGRATION_TEST_PATH
       type: string
     - name: INTEGRATION_COMMAND
@@ -20,7 +22,7 @@ spec:
       image: ghcr.io/ansible/community-ansible-dev-tools:v25.2.1 # v25.2.1
       workingDir: $(workspaces.source.path)
       script: |
-
+        git config --global --add safe.directory $(workspaces.source.path)/$(params.PROJECT_ROOT)
         echo "Running Integration Tests..."
         cd $(params.PROJECT_ROOT)/$(params.INTEGRATION_TEST_PATH) 
         $(params.INTEGRATION_COMMAND) 
