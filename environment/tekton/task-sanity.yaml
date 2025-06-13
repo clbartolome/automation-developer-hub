@@ -21,7 +21,7 @@ spec:
       image: ghcr.io/ansible/community-ansible-dev-tools:v25.2.1
       workingDir: $(workspaces.source.path)
       script: |
-        echo "Setting Git safe directory for: $(params.PROJECT_ROOT)
+        echo "Setting Git safe directory for: $(params.PROJECT_ROOT)"
         git config --global --add safe.directory $(params.PROJECT_ROOT)
 
     - name: run-sanity
