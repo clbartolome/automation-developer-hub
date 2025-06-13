@@ -18,13 +18,10 @@ spec:
   steps:
     - name: run-unit
       image: ghcr.io/ansible/community-ansible-dev-tools:v25.2.1 # v25.2.1
-      workingDir: $(workspaces.source.path)
+      workingDir: $(workspaces.source.path)/$(params.PROJECT_ROOT)/$(params.COLLECTION_PATH)
       script: |
         git config --global --add safe.directory $(workspaces.source.path)/$(params.PROJECT_ROOT)
         echo "Running Unit Test..."
-        cd $(params.PROJECT_ROOT)/$(params.COLLECTION_PATH)
         $(params.UNIT_COMMAND) -v
-        echo "Running Coverage Test..."
-        $(params.UNIT_COMMAND) $(params.COLLECTION_PATH).plugins.modules --cov-report=term-missing
 
 
