@@ -20,6 +20,7 @@ spec:
       image: ghcr.io/ansible/community-ansible-dev-tools:v25.2.1 # v25.2.1
       workingDir: $(workspaces.source.path)/$(params.PROJECT_ROOT)/collections/ansible_collections
       script: |
+        pip install pytest-cov
         git config --global --add safe.directory $(workspaces.source.path)/$(params.PROJECT_ROOT)
         echo "Running Unit Test..."
         PYTHONPATH=$(pwd) $(params.UNIT_COMMAND) -v
