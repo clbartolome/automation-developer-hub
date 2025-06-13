@@ -103,6 +103,8 @@ spec:
           value: $(params.PROJECT_ROOT)
         - name: SANITY_TEST_PATH
           value: $(params.COLLECTION_PATH)
+        - name: COLLECTION_PATH
+          value: $(params.COLLECTION_PATH)
       workspaces:
         - name: source
           workspace: workspace
@@ -141,9 +143,10 @@ spec:
     # ------------ MOLECULE TEST ------------ #
     - name: molecule-test
       runAfter:
-        - fetch-repository
-        - get-pipelinerun-url
-        - collection-info
+        - lint-test
+        - sanity-test
+        - unit-test
+        - integration-test
       taskRef:
         name: molecule
       params:
@@ -174,10 +177,6 @@ spec:
     # ------------ PUBLISH COLLECTION------------ #
     - name: publish-collection
       runAfter:
-        - lint-test
-        - sanity-test
-        - unit-test
-        - integration-test
         - molecule-test
       taskRef:
         name: publish
