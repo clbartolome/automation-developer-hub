@@ -24,6 +24,5 @@ spec:
         echo "Running Unit Test..."
         PYTHONPATH=$(pwd) $(params.UNIT_COMMAND) -v
         echo "Running Coverage Test..."
-        PYTHONPATH=$(pwd) $(params.UNIT_COMMAND) --cov --cov-report=term-missing
-
+        PYTHONPATH=$(pwd) $(params.UNIT_COMMAND) --cov
 
