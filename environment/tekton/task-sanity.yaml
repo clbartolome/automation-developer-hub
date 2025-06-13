@@ -24,7 +24,7 @@ spec:
 
     - name: run-sanity
       image: ghcr.io/ansible/community-ansible-dev-tools:v25.2.1 # v25.2.1
-      workingDir: $(workspaces.source.path)/$(params.PROJECT_ROOT)/collections
+      workingDir: $(workspaces.source.path)/$(params.PROJECT_ROOT)/collections/ansible-collections/sample_namespace/sample_collection
       script: |
 
         echo "Running Sanity Test..."
