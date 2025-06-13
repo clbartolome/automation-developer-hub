@@ -22,7 +22,6 @@ spec:
       script: |
         git config --global --add safe.directory $(workspaces.source.path)/$(params.PROJECT_ROOT)
         echo "Running Unit Test..."
-        pwd
-        $(params.UNIT_COMMAND) -v
+        ../../$(params.UNIT_COMMAND) -v
 
 
