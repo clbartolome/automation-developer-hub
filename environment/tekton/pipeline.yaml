@@ -100,7 +100,7 @@ spec:
         - name: PROJECT_ROOT
           value: $(params.PROJECT_ROOT)
         - name: SANITY_TEST_PATH
-          value: $(params.COLLECTION_PATH)/roles/backup_file/tasks/
+          value: $(params.COLLECTION_PATH)
       workspaces:
         - name: source
           workspace: workspace
