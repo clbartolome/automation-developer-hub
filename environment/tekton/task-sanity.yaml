@@ -9,7 +9,7 @@ spec:
       type: string
     - name: SANITY_COMMAND
       type: string
-      default: ansible-test sanity --python 3.8 --local
+      default: ansible-test sanity --python 3.13.2 --local
   workspaces:
     - name: source
       description: The workspace where app code has been cloned
