@@ -120,7 +120,11 @@ spec:
         - name: PROJECT_ROOT
           value: $(params.PROJECT_ROOT)
         - name: UNIT_TEST_PATH
-          value: $(params.COLLECTION_PATH)/roles/backup_file/tasks/
+          value: $(params.COLLECTION_PATH)
+        - name: COLLECTION_PATH
+          value: $(params.COLLECTION_PATH)
+        - name: UNIT_COMMAND
+          value: pytest
       workspaces:
         - name: source
           workspace: workspace
