@@ -13,18 +13,17 @@ spec:
       type: string
     - name: INTEGRATION_COMMAND
       type: string
-      default: ansible-test integration --start-at api_manage
+      default: ansible-test integration
   workspaces:
     - name: source
       description: The workspace where app code has been cloned
   steps:
     - name: run-integration
       image: ghcr.io/ansible/community-ansible-dev-tools:v25.2.1 # v25.2.1
-      workingDir: $(params.PROJECT_ROOT)/$(params.INTEGRATION_TEST_PATH)
+      workingDir: $(workspaces.source.path)/$(params.PROJECT_ROOT)/collections/ansible_collections
       script: |
         git config --global --add safe.directory $(workspaces.source.path)/$(params.PROJECT_ROOT)
-        echo "Running Integration Tests..."
-        cd $(params.PROJECT_ROOT)/$(params.INTEGRATION_TEST_PATH) 
-        $(params.INTEGRATION_COMMAND) 
+        echo "Running Unit Test..."
+        PYTHONPATH=$(pwd) $(params.UNIT_COMMAND)
 
 
