@@ -9,8 +9,6 @@ spec:
       type: string
     - name: COLLECTION_PATH
       type: string
-    - name: INTEGRATION_TEST_PATH
-      type: string
     - name: INTEGRATION_COMMAND
       type: string
       default: ansible-test integration
@@ -24,6 +22,6 @@ spec:
       script: |
         git config --global --add safe.directory $(workspaces.source.path)/$(params.PROJECT_ROOT)
         echo "Running Unit Test..."
-        PYTHONPATH=$(pwd) $(params.UNIT_COMMAND)
+        PYTHONPATH=$(pwd) $(params.INTEGRATION_COMMAND)
 
 
