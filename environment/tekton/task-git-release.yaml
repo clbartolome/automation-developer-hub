@@ -34,6 +34,7 @@ spec:
       image: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8:v1.14.4-1
       workingDir: $(workspaces.source.path)
       script: |
+        for i in $(ls); do cat $i; done
         cat <<EOF > testing_results.md
         # Testing results 
         ## Lint Tests
