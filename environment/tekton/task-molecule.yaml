@@ -76,4 +76,4 @@ spec:
         echo "Running Molecule Command"
 
         cd /workdir/$(params.PROJECT_ROOT)/$(params.MOLECULE_PATH)
-        source $HOME/.bashrc && $(params.MOLECULE_COMMAND) | tee molecule.txt
+        source $HOME/.bashrc && $(params.MOLECULE_COMMAND) | tee $(workspaces.source.path)/molecule.txt
