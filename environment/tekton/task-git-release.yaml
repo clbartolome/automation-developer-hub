@@ -34,29 +34,28 @@ spec:
       image: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8:v1.14.4-1
       workingDir: $(workspaces.source.path)
       script: |
-        sleep 1200
         cat <<EOF > testing_results.md
         # Testing results 
         ## Lint Tests
-        ```
+        \`\`\`
         $(cat lint.txt)
-        ```
+        \`\`\`
         ## Sanity Tests
-        ```
+        \`\`\`
         $(cat sanity.txt)
-        ```
+        \`\`\`
         ## Unit Tests
-        ```
+        \`\`\`
         $(cat unit.txt)
-        ```
+        \`\`\`
         ## Integration Tests
-        ```
+        \`\`\`
         $(cat integration.txt)
-        ```
+        \`\`\`
         ## Molecule Tests
-        ```
+        \`\`\`
         $(cat molecule.txt)
-        ```
+        \`\`\`
         EOF
         cat testing_results.md
 
