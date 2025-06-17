@@ -23,7 +23,7 @@ spec:
         pip install pytest-cov
         git config --global --add safe.directory $(workspaces.source.path)/$(params.PROJECT_ROOT)
         echo "Running Unit Test..."
-        PYTHONPATH=$(pwd) $(params.UNIT_COMMAND) -v | tee $(workspaces.source.path)/unit.txt
+        PYTHONPATH=$(pwd) $(params.UNIT_COMMAND) -v > $(workspaces.source.path)/unit.txt 2>&1
         echo "Running Coverage Test..."
-        PYTHONPATH=$(pwd) $(params.UNIT_COMMAND) --cov | tee $(workspaces.source.path)/coverage.txt
+        PYTHONPATH=$(pwd) $(params.UNIT_COMMAND) --cov > $(workspaces.source.path)/coverage.txt 2>&1
 

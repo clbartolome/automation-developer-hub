@@ -22,5 +22,5 @@ spec:
       script: |
         git config --global --add safe.directory $(workspaces.source.path)/$(params.PROJECT_ROOT)
         echo "Running Sanity Test..."
-        $(params.SANITY_COMMAND) | tee $(workspaces.source.path)/sanity.txt
+        $(params.SANITY_COMMAND) > $(workspaces.source.path)/sanity.txt 2>&1
 
