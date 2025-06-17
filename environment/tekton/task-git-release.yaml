@@ -30,16 +30,29 @@ spec:
     - name: source
       description: The workspace where app code has been cloned
   steps:
-    - name: fake-notes
+    - name: testing-results
       image: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8:v1.14.4-1
       workingDir: $(workspaces.source.path)
       script: |
-
-        cat <<EOF > notes.md
-        # notes
-        Fake notes for testing
+        lint = $(cat lint.txt)
+        sanity = $(cat sanity.txt)
+        unit = $(cat unit.txt)
+        integration = $(cat integration.txt)
+        molecule = $(cat molecule.txt)
+        cat <<EOF > testing_results.md
+        # Testing results 
+        ## Lint Tests
+        $lint
+        ## Sanity Tests
+        $sanity
+        ## Unit Tests
+        $unit
+        ## Integration Tests
+        $integration
+        ## Molecule Tests
+        $molecule
         EOF
-        cat notes.md
+        cat testing_results.md
 
     - name: create-release
       image: registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8:v1.14.4-1
@@ -85,5 +98,5 @@ spec:
           -H "Authorization: Bearer $GITHUB_TOKEN" \
           -H "X-GitHub-Api-Version: 2022-11-28" \
           -H "Content-Type: application/octet-stream" \
-          "https://uploads.github.com/repos/zaskan/$(params.PATH_CONTEXT)/releases/$RELEASE_ID/assets?name=notes.md" \
-          --data-binary "@../notes.md"
+          "https://uploads.github.com/repos/zaskan/$(params.PATH_CONTEXT)/releases/$RELEASE_ID/assets?name=testing_results.md" \
+          --data-binary "@../testing_results.md"

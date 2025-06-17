@@ -22,6 +22,6 @@ spec:
       script: |
         git config --global --add safe.directory $(workspaces.source.path)/$(params.PROJECT_ROOT)
         echo "Running Integration Test..."
-        PYTHONPATH=$(pwd) $(params.INTEGRATION_COMMAND)
+        PYTHONPATH=$(pwd) $(params.INTEGRATION_COMMAND) | tee integration.txt
 
 
