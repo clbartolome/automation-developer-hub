@@ -42,15 +42,25 @@ spec:
         cat <<EOF > testing_results.md
         # Testing results 
         ## Lint Tests
+        ```
         $lint
+        ```
         ## Sanity Tests
+        ```
         $sanity
+        ```
         ## Unit Tests
+        ```
         $unit
+        ```
         ## Integration Tests
+        ```
         $integration
+        ```
         ## Molecule Tests
+        ```
         $molecule
+        ```
         EOF
         cat testing_results.md
 
