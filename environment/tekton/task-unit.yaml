@@ -27,3 +27,4 @@ spec:
         echo "Running Coverage Test..."
         PYTHONPATH=$(pwd) $(params.UNIT_COMMAND) --cov > $(workspaces.source.path)/coverage.txt 2>&1
 
+
