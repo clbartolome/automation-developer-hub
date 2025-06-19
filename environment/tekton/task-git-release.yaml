@@ -40,10 +40,6 @@ spec:
         \`\`\`
         $(cat lint.txt)
         \`\`\`
-        ## Sanity Tests
-        \`\`\`
-        $(cat sanity.txt)
-        \`\`\`
         ## Unit Tests
         \`\`\`
         $(cat unit.txt)
