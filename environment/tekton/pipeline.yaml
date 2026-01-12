@@ -223,6 +223,30 @@ spec:
       workspaces:
         - name: source
           workspace: workspace
+    # ------------ SINK ------------ #
+  finally:
+    - name: tests-log
+      taskRef:
+        kind: Task
+        name: tests-log
+      params:
+        - name: GIT_REPO
+          value: "$(params.GIT_REPO)"
+        - name: PATH_CONTEXT
+          value: $(params.PROJECT_ROOT)
+        - name: COLLECTION_VERSION
+          value: "$(tasks.collection-info.results.COLLECTION_VERSION)"
+        - name: COLLECTION_NAME
+          value: "$(tasks.collection-info.results.COLLECTION_NAME)"
+        - name: COLLECTION_NAMESPACE
+          value: "$(tasks.collection-info.results.COLLECTION_NAMESPACE)"
+        - name: CONFIGURATION_SECRET
+          value: "$(params.CONFIGURATION_SECRET)"
+        - name: PIPELINERUN_URL
+          value: "$(tasks.get-pipelinerun-url.results.PIPELINERUN_URL)"
+      workspaces:
+        - name: source
+          workspace: workspace
 
   workspaces:
     - name: workspace
