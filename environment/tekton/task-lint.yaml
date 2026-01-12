@@ -22,6 +22,8 @@ spec:
       script: |
 
         echo "Running Lint..."
-        $(params.LINT_COMMAND) $(params.PROJECT_ROOT)/$(params.LINT_TEST_PATH) 
+        $(params.LINT_COMMAND) $(params.PROJECT_ROOT)/$(params.LINT_TEST_PATH)  > $(workspaces.source.path)/lint.txt 2>&1
+        echo RESULTS-----------------------
+        cat $(workspaces.source.path)/lint.txt  
 
 

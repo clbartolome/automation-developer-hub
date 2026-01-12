@@ -1,0 +1,26 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: integration
+  namespace: ansible-dev
+spec:
+  params:
+    - name: PROJECT_ROOT
+      type: string
+    - name: COLLECTION_PATH
+      type: string
+    - name: INTEGRATION_COMMAND
+      type: string
+      default: ansible-test integration
+  workspaces:
+    - name: source
+      description: The workspace where app code has been cloned
+  steps:
+    - name: run-integration
+      image: ghcr.io/ansible/community-ansible-dev-tools:v25.2.1 # v25.2.1
+      workingDir: $(workspaces.source.path)/$(params.PROJECT_ROOT)/$(params.COLLECTION_PATH)
+      script: |
+        git config --global --add safe.directory $(workspaces.source.path)/$(params.PROJECT_ROOT)
+        echo "Running Integration Test..."
+        PYTHONPATH=$(pwd) $(params.INTEGRATION_COMMAND) > $(workspaces.source.path)/integration.txt 2>&1
+

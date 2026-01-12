@@ -90,12 +90,65 @@ spec:
       workspaces:
         - name: source
           workspace: workspace
-    # ------------ MOLECULE TEST ------------ #
-    - name: molecule-test
+      # ------------ SANITY ANALYSIS ------------ #
+    # - name: sanity-test
+    #   runAfter:
+    #     - fetch-repository
+    #     - get-pipelinerun-url
+    #     - collection-info
+    #   taskRef:
+    #     name: sanity
+    #   params:
+    #     - name: PROJECT_ROOT
+    #       value: $(params.PROJECT_ROOT)
+    #     - name: SANITY_TEST_PATH
+    #       value: $(params.COLLECTION_PATH)
+    #     - name: COLLECTION_PATH
+    #       value: $(params.COLLECTION_PATH)
+    #   workspaces:
+    #     - name: source
+    #       workspace: workspace
+        # ------------ UNIT ANALYSIS ------------ #
+    - name: unit-test
       runAfter:
         - fetch-repository
         - get-pipelinerun-url
         - collection-info
+      taskRef:
+        name: unit
+      params:
+        - name: PROJECT_ROOT
+          value: $(params.PROJECT_ROOT)
+        - name: COLLECTION_PATH
+          value: $(params.COLLECTION_PATH)
+      workspaces:
+        - name: source
+          workspace: workspace
+          # ------------ INTEGRATION ANALYSIS ------------ #
+    - name: integration-test
+      runAfter:
+        - fetch-repository
+        - get-pipelinerun-url
+        - collection-info
+      taskRef:
+        name: integration
+      params:
+        - name: PROJECT_ROOT
+          value: $(params.PROJECT_ROOT)
+        - name: INTEGRATION_TEST_PATH
+          value: $(params.COLLECTION_PATH)/roles/backup_file/tasks/
+        - name: COLLECTION_PATH
+          value: $(params.COLLECTION_PATH)
+      workspaces:
+        - name: source
+          workspace: workspace
+    # ------------ MOLECULE TEST ------------ #
+    - name: molecule-test
+      runAfter:
+        - lint-test
+#        - sanity-test
+        - unit-test
+        - integration-test
       taskRef:
         name: molecule
       params:
@@ -126,8 +179,7 @@ spec:
     # ------------ PUBLISH COLLECTION------------ #
     - name: publish-collection
       runAfter:
-        - molecule-test-destroy
-        - lint-test
+        - molecule-test
       taskRef:
         name: publish
       params:
@@ -153,6 +205,30 @@ spec:
       taskRef:
         kind: Task
         name: git-release
+      params:
+        - name: GIT_REPO
+          value: "$(params.GIT_REPO)"
+        - name: PATH_CONTEXT
+          value: $(params.PROJECT_ROOT)
+        - name: COLLECTION_VERSION
+          value: "$(tasks.collection-info.results.COLLECTION_VERSION)"
+        - name: COLLECTION_NAME
+          value: "$(tasks.collection-info.results.COLLECTION_NAME)"
+        - name: COLLECTION_NAMESPACE
+          value: "$(tasks.collection-info.results.COLLECTION_NAMESPACE)"
+        - name: CONFIGURATION_SECRET
+          value: "$(params.CONFIGURATION_SECRET)"
+        - name: PIPELINERUN_URL
+          value: "$(tasks.get-pipelinerun-url.results.PIPELINERUN_URL)"
+      workspaces:
+        - name: source
+          workspace: workspace
+    # ------------ SINK ------------ #
+  finally:
+    - name: tests-log
+      taskRef:
+        kind: Task
+        name: tests-log
       params:
         - name: GIT_REPO
           value: "$(params.GIT_REPO)"

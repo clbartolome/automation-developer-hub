@@ -7,5 +7,5 @@ data:
   GITHUB_TOKEN: "{{ github_token | b64encode }}"
   AH_HOST: "{{ aap_host | b64encode }}"
   AH_PASSWORD: "{{ aap_password | b64encode }}"
-  AH_USERNAME: "{{ admin | b64encode }}"
+  AH_USERNAME: "{{ 'admin' | b64encode }}"
   

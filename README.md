@@ -24,7 +24,10 @@ cd installation/ansible-navigator
 ansible-builder build -t custom-ee:latest
 ```
 
-- Fork repository `https://github.com/zaskan/ansible-devspaces-demo` and generate a token so demo resources can perform actions on it
+- Fork repository `https://github.com/zaskan/ansible-devspaces-demo` and generate a token so demo resources can perform actions on it with following permissions:
+  - Contents (RW) 
+  - Webhooks (RW) 
+  - Pull requests (RW)
 
 ## Install
 
