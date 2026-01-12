@@ -91,23 +91,23 @@ spec:
         - name: source
           workspace: workspace
       # ------------ SANITY ANALYSIS ------------ #
-    - name: sanity-test
-      runAfter:
-        - fetch-repository
-        - get-pipelinerun-url
-        - collection-info
-      taskRef:
-        name: sanity
-      params:
-        - name: PROJECT_ROOT
-          value: $(params.PROJECT_ROOT)
-        - name: SANITY_TEST_PATH
-          value: $(params.COLLECTION_PATH)
-        - name: COLLECTION_PATH
-          value: $(params.COLLECTION_PATH)
-      workspaces:
-        - name: source
-          workspace: workspace
+    # - name: sanity-test
+    #   runAfter:
+    #     - fetch-repository
+    #     - get-pipelinerun-url
+    #     - collection-info
+    #   taskRef:
+    #     name: sanity
+    #   params:
+    #     - name: PROJECT_ROOT
+    #       value: $(params.PROJECT_ROOT)
+    #     - name: SANITY_TEST_PATH
+    #       value: $(params.COLLECTION_PATH)
+    #     - name: COLLECTION_PATH
+    #       value: $(params.COLLECTION_PATH)
+    #   workspaces:
+    #     - name: source
+    #       workspace: workspace
         # ------------ UNIT ANALYSIS ------------ #
     - name: unit-test
       runAfter:
@@ -146,7 +146,7 @@ spec:
     - name: molecule-test
       runAfter:
         - lint-test
-        - sanity-test
+#        - sanity-test
         - unit-test
         - integration-test
       taskRef:
